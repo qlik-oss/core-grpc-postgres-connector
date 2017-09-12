@@ -1,18 +1,11 @@
 syntax="proto3";
-
-option java_multiple_files = true;
-option java_package = "grpcqlik";
-option java_outer_classname = "GrpcQlik";
-
 package qlik;
-
 message ConnectionInfo
 {
     string connectionString = 1;
     string user = 2;
     string password = 3;
 }
-
 message GenericCommand
 {
     string command = 1;
@@ -20,64 +13,44 @@ message GenericCommand
     repeated string parameters = 3;
     ConnectionInfo connection = 4;
 }
-
 message GenericCommandResponse
 {
     string data = 1;
 }
-
 message SessionInfo
 {
     string user = 1;
     string sessionId = 2;
     string docId = 3;
 }
-
 message DataInfo
 {
     string statement = 1;
     string statementParameters = 2;
 }
-
 message GetDataOptions
 {
     ConnectionInfo connection = 1;
     SessionInfo sessionInfo = 2;
     DataInfo parameters = 3;
 }
-
 message Dual {
     double numData = 1; /// Numeric value as double.
     string strData = 2; /// String.
     bool strIsNull = 3; /// String is absent rather than empty.
 }
-
 message Row {
     repeated Dual duals = 1; /// Row of duals.
 }
-
+message Column {
+    repeated string strings = 1;
+    repeated double numbers = 2;
+    repeated bool strIsNulls = 3;
+}
 message BundledRows {
     repeated Row rows = 1;
+    repeated Column cols = 2;
 }
-message BundledRows2 {
-  int64 rowCount = 1;
-  int64 columnCount = 2;
-  repeated string strings = 3;
-  repeated double numerics = 4;
-  repeated bool strIsNulls = 5;
-  bytes rawData=6;
-}
-
-message Column {
-    repeated string strings = 3;
-    repeated double numerics = 4;
-    repeated bool strIsNulls = 5;
-}
-message BundledRows3 {
-    int64 rowCount = 1;
-    repeated Column column = 3;
-}
-
 enum FieldType {
     UNKNOWN = 0;
     ASCII = 1;
@@ -90,29 +63,16 @@ enum FieldType {
     FIX = 8;
     MONEY = 9;
 }
-
 message FieldInfo {
     string name = 1;
     FieldType type = 2;
 }
-
-message ResultSpec {
+message GetDataResponse {
     repeated FieldInfo fieldInfo = 1;
     string tableName = 2;
 }
-
-message ResultChunk {
-    ResultSpec resultSpec  = 1;
-
-    BundledRows rowsOfDuals = 2;
-    BundledRows2 cellsByRow = 3;
-    BundledRows3 cellsByColumn = 4;
-
-}
 service Connector
 {
-    //rpc ExecuteGenericCommand (GenericCommand) returns (GenericCommandResponse) {}
-
-    rpc GetData2 (GetDataOptions) returns (stream ResultChunk) {}
+    rpc ExecuteGenericCommand (GenericCommand) returns (GenericCommandResponse) {}
+    rpc GetData (GetDataOptions) returns (stream BundledRows) {}
 }
-

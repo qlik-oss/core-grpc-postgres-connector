@@ -4,17 +4,17 @@ package qlik
  *	Class AsyncStreamWriter
  */
 type AsyncStreamWriter struct {
-	grpcStream Connector_GetData2Server
-	channel chan *ResultChunk
+	grpcStream Connector_GetDataServer
+	channel chan *BundledRows
 	done *chan bool
 }
 
-func NewAsyncStreamWriter(grpcStream Connector_GetData2Server, done *chan bool) *AsyncStreamWriter {
-	var this = &AsyncStreamWriter{grpcStream, make(chan *ResultChunk, 100), done}
+func NewAsyncStreamWriter(grpcStream Connector_GetDataServer, done *chan bool) *AsyncStreamWriter {
+	var this = &AsyncStreamWriter{grpcStream, make(chan *BundledRows, 10), done}
 	go this.run();
 	return this
 }
-func (this *AsyncStreamWriter) Write(rowBundle *ResultChunk) {
+func (this *AsyncStreamWriter) Write(rowBundle *BundledRows) {
 	this.channel <- rowBundle
 }
 
