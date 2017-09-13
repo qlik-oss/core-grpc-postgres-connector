@@ -70,6 +70,9 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 	var t0 = makeTimestamp()
 
 	var connectionString = dataOptions.Connection.ConnectionString
+
+	connectionString = connectionString + "user=" + dataOptions.Connection.User + ";password=" + dataOptions.Connection.Password + ";"
+
 	if this.postgresReaders[connectionString] == nil {
 		fmt.Println("Starting connection pool");
 		fmt.Println(connectionString);
