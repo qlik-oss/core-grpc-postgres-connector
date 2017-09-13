@@ -27,37 +27,32 @@ import (
 	"../qlik"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"github.com/jackc/pgx"
 	"os"
 	"runtime/pprof"
 	"flag"
 	"time"
-	"google.golang.org/grpc/metadata"
 	"golang.org/x/net/context"
-	"github.com/golang/protobuf/proto"
+	"../postgres"
 )
 
 const (
 	port = ":50051"
 )
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
-var pool *pgx.ConnPool
-type server struct{}
+
+type server struct{
+	postgresReaders map[string]*postgres.PostgresReader
+}
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-
-
-
-
-func (s *server) ExecuteGenericCommand(context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
+func (this *server) ExecuteGenericCommand(context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
 	return &qlik.GenericCommandResponse{Data: "{}"}, nil
 }
 
-func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
-	var done = make(chan bool)
+func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
 
 	flag.Parse()
 	if *cpuprofile != "" {
@@ -72,64 +67,29 @@ func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector
 		defer pprof.StopCPUProfile()
 	}
 
-	// Connect to postgres
-	conn, err := pool.Acquire()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error acquiring connection:", err)
-	}
-	defer pool.Release(conn)
-
-	// Select data
-
-	fmt.Println(dataOptions.Parameters.Statement);
-	rows, _ := conn.Query(dataOptions.Parameters.Statement)
-
 	var t0 = makeTimestamp()
 
-	// Start asynchronus translation and writing
-	var asyncStreamwriter = qlik.NewAsyncStreamWriter(stream, &done)
-	var asyncTranslator = qlik.NewAsyncTranslator(asyncStreamwriter, rows.FieldDescriptions())
-
-	// Set header with data format
-	var headerMap = make(map[string]string)
-	var getDataResponseBytes, _ = proto.Marshal(asyncTranslator.GetDataResponseMetadata());
-	headerMap["x-qlik-getdata-bin"] = string(getDataResponseBytes)
-	stream.SendHeader(metadata.New(headerMap))
-
-	//Read data from postgres
-	const MAX_ROWS_PER_BUNDLE = 200
-	var rowList = [][]interface{}{}
-	for rows.Next() {
-		var srcColumns, _ = rows.Values()
-		rowList = append(rowList, srcColumns)
-		if len(rowList) >= MAX_ROWS_PER_BUNDLE {
-			asyncTranslator.Write(rowList)
-			rowList = [][]interface{}{}
+	var connectionString = dataOptions.Connection.ConnectionString
+	if this.postgresReaders[connectionString] == nil {
+		fmt.Println("Starting connection pool");
+		fmt.Println(connectionString);
+		var err2 error
+		this.postgresReaders[connectionString], err2 = postgres.NewPostgresReader(connectionString)
+		if err2 != nil {
+			return err2
 		}
+	} else {
+		fmt.Println("Reusing connection pool")
 	}
-	if len(rowList) > 0 {
-		asyncTranslator.Write(rowList)
-		rowList = [][]interface{}{}
-	}
-	asyncTranslator.Close()
+	var getDataErr = this.postgresReaders[connectionString].GetData(dataOptions, stream)
 
-	//Wait for all translater and writer to finish
-	<-done
 	var t1 = makeTimestamp()
 	fmt.Println("Time", t1 - t0, "ms")
-	return nil
+	return getDataErr
 }
 
-
-
 func main() {
-	fmt.Println("Started...")
 	var err error
-	pool, err = pgx.NewConnPool(extractConfig())
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Unable to connect to database:", err)
-		os.Exit(1)
-	}
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -137,38 +97,16 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	qlik.RegisterConnectorServer(s, &server{})
-	fmt.Println("Server registered...")
+	var srv = &server{ make(map[string]*postgres.PostgresReader)}
+	qlik.RegisterConnectorServer(s, srv)
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
+	fmt.Println("Server started", port)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
-	}
-}
-
-//PGHOST=localhost;PGUSER=testuser;PGPASSWORD=testuser;PGDATABASE=test
-func extractConfig() pgx.ConnPoolConfig {
-	var config pgx.ConnPoolConfig
-
-	config.Host = os.Getenv("PGHOST")
-	if config.Host == "" {
-		config.Host = "localhost"
+		return;
 	}
 
-	config.User = os.Getenv("PGUSER")
-	if config.User == "" {
-		config.User = "testuser"
-	}
 
-	config.Password = os.Getenv("PGPASSWORD")
-	if config.Password == "" {
-		config.Password = "testuser"
-	}
 
-	config.Database = os.Getenv("PGDATABASE")
-	if config.Database == "" {
-		config.Database = "test"
-	}
-
-	return config
 }

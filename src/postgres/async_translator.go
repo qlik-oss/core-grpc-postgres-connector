@@ -1,31 +1,18 @@
-package qlik
+package postgres
 
 import (
 	"github.com/jackc/pgx"
+	"../qlik"
 )
 
-var emptyString = ""
-
-func RowsToGetDataResponse(rows *pgx.Rows) *GetDataResponse {
-	var descrs = rows.FieldDescriptions()
-	var types = getTypeConstants(descrs)
-	var array = make([]*FieldInfo, len(descrs))
-
-	for i := range descrs {
-		array[i] = &FieldInfo{descrs[i].Name, types[i]}
-	}
-	return &GetDataResponse{array, "dummy"}
-}
-
-
-func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []FieldType {
-	var translators = make([]FieldType, len(fieldDescriptors))
+func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType {
+	var translators = make([]qlik.FieldType, len(fieldDescriptors))
 	for i, fieldDescr := range fieldDescriptors {
 		switch fieldDescr.DataTypeName {
 		case "int4":
-			translators[i] = FieldType_INTEGER
+			translators[i] = qlik.FieldType_INTEGER
 		default:
-			translators[i] = FieldType_ASCII
+			translators[i] = qlik.FieldType_ASCII
 		}
 	}
 	return translators
@@ -36,36 +23,36 @@ func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []FieldType {
  */
 
 type AsyncTranslator struct {
-	writer *AsyncStreamWriter
+	writer *qlik.AsyncStreamWriter
 	fieldDescriptors []pgx.FieldDescription
 	channel chan [][]interface{}
 }
 
-func NewAsyncTranslator(writer *AsyncStreamWriter, fieldDescriptors []pgx.FieldDescription) *AsyncTranslator {
+func NewAsyncTranslator(writer *qlik.AsyncStreamWriter, fieldDescriptors []pgx.FieldDescription) *AsyncTranslator {
 	var this = &AsyncTranslator{writer, fieldDescriptors, make(chan [][]interface{}, 10)}
 	go this.run()
 	return this
 }
 
-func ( this *AsyncTranslator) GetDataResponseMetadata() *GetDataResponse {
+func ( this *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
 	var types = getTypeConstants(this.fieldDescriptors)
-	var array = make([]*FieldInfo, len(this.fieldDescriptors))
+	var array = make([]*qlik.FieldInfo, len(this.fieldDescriptors))
 
 	for i := range this.fieldDescriptors {
-		array[i] = &FieldInfo{this.fieldDescriptors[i].Name, types[i]}
+		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, types[i]}
 	}
-	return &GetDataResponse{array, ""}
+	return &qlik.GetDataResponse{array, ""}
 }
 
-func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *BundledRows {
+func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.BundledRows {
 	var typeConsts = getTypeConstants(this.fieldDescriptors)
 	var columnCount, rowCount = len(this.fieldDescriptors), int64(len(tempQixRowList))
-	var rowBundle = BundledRows{Cols: make([]*Column, columnCount)}
+	var rowBundle = qlik.BundledRows{Cols: make([]*qlik.Column, columnCount)}
 
 	for i := 0; i < columnCount; i++ {
-		var column = &Column{}
+		var column = &qlik.Column{}
 		switch typeConsts[i] {
-		case FieldType_ASCII:
+		case qlik.FieldType_ASCII:
 			column.StrIsNulls=make([]bool, rowCount)
 			column.Strings=make([]string, rowCount)
 			column.Numbers=nil
@@ -75,11 +62,11 @@ func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *Bu
 					column.Strings[r] = srcValue.(string)
 					column.StrIsNulls[r] = false
 				} else {
-					column.Strings[r] = emptyString
+					column.Strings[r] = ""
 					column.StrIsNulls[r] = true
 				}
 			}
-		case FieldType_INTEGER:
+		case qlik.FieldType_INTEGER:
 			column.StrIsNulls=nil
 			column.Strings=nil
 			column.Numbers=make([]float64, rowCount)
@@ -102,10 +89,7 @@ func (this *AsyncTranslator) Close() {
 }
 
 func (this *AsyncTranslator) run() {
-	//var translators = getTranslators(this.fieldDescriptors);
 	for tempQixRowList := range this.channel {
-		//this.writer.Write(buildRowBundle(tempQixRowList, translators))
-		//var resultChunk = &ResultChunk{ResultSpec: nil, CellsByRow:this.buildRowBundle2(tempQixRowList)}
 		var resultChunk = this.buildRowBundle(tempQixRowList)
 		this.writer.Write(resultChunk)
 	}
