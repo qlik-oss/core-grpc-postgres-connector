@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"../qlik"
+	"github.com/qlik-trial/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"os"
@@ -32,7 +32,8 @@ import (
 	"flag"
 	"time"
 	"golang.org/x/net/context"
-	"../postgres"
+
+	"github.com/qlik-trial/postgres-grpc-connector/postgres"
 )
 
 const (

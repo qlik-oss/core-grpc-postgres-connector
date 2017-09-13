@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../qlik"
+	"github.com/qlik-trial/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
 	"github.com/golang/protobuf/proto"
 	"context"

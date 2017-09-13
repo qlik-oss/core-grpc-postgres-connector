@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"github.com/jackc/pgx"
-	"../qlik"
+	"github.com/qlik-trial/postgres-grpc-connector/qlik"
 )
 
 func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType {

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"golang.org/x/net/context"
 	"github.com/golang/protobuf/proto"
-	"../qlik"
+	"github.com/qlik-trial/postgres-grpc-connector/qlik"
 	"strings"
 )
 
