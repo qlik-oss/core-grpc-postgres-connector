@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/qlik-trial/postgres-grpc-connector/qlik"
+	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
 	"github.com/golang/protobuf/proto"
 	"context"
@@ -15,7 +15,7 @@ func makeTimestamp() int64 {
 
 func main() {
 
-	conn, err := grpc.Dial("selun-gwe.qliktech.com:50051", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	defer conn.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -23,12 +23,12 @@ func main() {
 	}
 	client := qlik.NewConnectorClient(conn)
 	var getDataOptions = &qlik.GetDataOptions{}
-	getDataOptions.Connection = &qlik.ConnectionInfo{"host=localhost;user=testuser;password=testuser;database=test", "",""}
+	getDataOptions.Connection = &qlik.ConnectionInfo{"host=selun.gwe.qliktech.com;user=testuser;password=testuser;database=test", "",""}
 	getDataOptions.Parameters = &qlik.DataInfo{"select * from airports", ""}
 	var t0 = makeTimestamp()
 
 	var stream, err2 = client.GetData(context.Background(), getDataOptions)
-
+	fmt.Println(err2)
 	var header, _ = stream.Header()
 	var t = header["x-qlik-getdata-bin"]
 	var t2 = t[0]
