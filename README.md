@@ -4,8 +4,10 @@ A POC to validate that it is possible to write a custom connector without the qv
 
 ## Start Grpc Postgres go services
 
-1. go run src\server\postgres_grpc_server.go
-2. Move GrpcPostgres into C:\Users\seb\AppData\Local\Programs\Common Files\Qlik\Custom Data (change to your username)
+1. Install tools using install-tools.sh 
+1. Run "dep ensure" to download/update dependencies
+2. go run src\server\postgres_grpc_server.go
+3. Move GrpcPostgres into C:\Users\seb\AppData\Local\Programs\Common Files\Qlik\Custom Data (change to your username)
 
 ## Build engine branch hsv/grpccol
 

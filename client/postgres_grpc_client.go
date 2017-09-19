@@ -23,13 +23,14 @@ func main() {
 	}
 	client := qlik.NewConnectorClient(conn)
 	var getDataOptions = &qlik.GetDataOptions{}
-	getDataOptions.Connection = &qlik.ConnectionInfo{"host=selun.gwe.qliktech.com;user=testuser;password=testuser;database=test", "",""}
+	getDataOptions.Connection = &qlik.ConnectionInfo{"host=selun-gwe.qliktech.com;database=test", "testuser","testuser"}
 	getDataOptions.Parameters = &qlik.DataInfo{"select * from airports", ""}
 	var t0 = makeTimestamp()
 
 	var stream, err2 = client.GetData(context.Background(), getDataOptions)
 	fmt.Println(err2)
-	var header, _ = stream.Header()
+	var header, err3 = stream.Header()
+	fmt.Println(err3)
 	var t = header["x-qlik-getdata-bin"]
 	var t2 = t[0]
 	var dataResponse = qlik.GetDataResponse{FieldInfo: make([]*qlik.FieldInfo, 100), TableName: "x"}

@@ -6,16 +6,16 @@ import (
 )
 
 func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType {
-	var translators = make([]qlik.FieldType, len(fieldDescriptors))
+	var fieldTypes = make([]qlik.FieldType, len(fieldDescriptors))
 	for i, fieldDescr := range fieldDescriptors {
 		switch fieldDescr.DataTypeName {
 		case "int4":
-			translators[i] = qlik.FieldType_INTEGER
+			fieldTypes[i] = qlik.FieldType_INTEGER
 		default:
-			translators[i] = qlik.FieldType_ASCII
+			fieldTypes[i] = qlik.FieldType_TEXT
 		}
 	}
-	return translators
+	return fieldTypes
 }
 
 /**
@@ -39,7 +39,7 @@ func ( this *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
 	var array = make([]*qlik.FieldInfo, len(this.fieldDescriptors))
 
 	for i := range this.fieldDescriptors {
-		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, types[i]}
+		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, types[i], []qlik.FieldTag{}}
 	}
 	return &qlik.GetDataResponse{array, ""}
 }
@@ -52,22 +52,22 @@ func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *ql
 	for i := 0; i < columnCount; i++ {
 		var column = &qlik.Column{}
 		switch typeConsts[i] {
-		case qlik.FieldType_ASCII:
-			column.StrIsNulls=make([]bool, rowCount)
+		case qlik.FieldType_TEXT:
+			column.Flags=make([]qlik.ValueFlag, rowCount)
 			column.Strings=make([]string, rowCount)
 			column.Numbers=nil
 			for r := 0; r < len(tempQixRowList); r++ {
 				var srcValue = tempQixRowList[r][i]
 				if srcValue != nil {
 					column.Strings[r] = srcValue.(string)
-					column.StrIsNulls[r] = false
+					column.Flags[r] = qlik.ValueFlag_Normal
 				} else {
 					column.Strings[r] = ""
-					column.StrIsNulls[r] = true
+					column.Flags[r] = qlik.ValueFlag_Null
 				}
 			}
 		case qlik.FieldType_INTEGER:
-			column.StrIsNulls=nil
+			column.Flags = nil
 			column.Strings=nil
 			column.Numbers=make([]float64, rowCount)
 			for r := 0; r < len(tempQixRowList); r++ {
