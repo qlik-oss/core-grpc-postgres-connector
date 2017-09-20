@@ -23,11 +23,13 @@ jobs:
       - run:
           name: Build Docker Image
           command: |
-            docker build -t $DOCKER_REPO:$CIRCLE_BUILD_NUM .
+            VER="0.0.1-$CIRCLE_BUILD_NUM"
+            docker build -t $DOCKER_REPO:$VER .
       - deploy:
           name: Push image to Docker Hub
           command: |
+            VER="0.0.1-$CIRCLE_BUILD_NUM"
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag $DOCKER_REPO:$CIRCLE_BUILD_NUM $DOCKER_REPO:latest
+              docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
             fi
             docker push $DOCKER_REPO
