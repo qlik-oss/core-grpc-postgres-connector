@@ -38,7 +38,7 @@ func (this *PostgresReader) GetData(dataOptions *qlik.GetDataOptions, stream qli
 	}
 	defer this.pool.Release(conn)
 
-	// Select data
+	// Select postgresRowData
 
 	fmt.Println(dataOptions.Parameters.Statement);
 	fmt.Println(dataOptions.Connection.ConnectionString);
@@ -51,13 +51,13 @@ func (this *PostgresReader) GetData(dataOptions *qlik.GetDataOptions, stream qli
 	var asyncStreamwriter = qlik.NewAsyncStreamWriter(stream, &done)
 	var asyncTranslator = NewAsyncTranslator(asyncStreamwriter, rows.FieldDescriptions())
 
-	// Set header with data format
+	// Set header with postgresRowData format
 	var headerMap = make(map[string]string)
 	var getDataResponseBytes, _ = proto.Marshal(asyncTranslator.GetDataResponseMetadata());
 	headerMap["x-qlik-getdata-bin"] = string(getDataResponseBytes)
 	stream.SendHeader(metadata.New(headerMap))
 
-	//Read data from postgres
+	//Read postgresRowData from postgres
 	const MAX_ROWS_PER_BUNDLE = 200
 	var rowList = [][]interface{}{}
 	for rows.Next() {

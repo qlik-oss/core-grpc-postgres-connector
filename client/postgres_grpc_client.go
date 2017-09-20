@@ -24,7 +24,7 @@ func main() {
 	client := qlik.NewConnectorClient(conn)
 	var getDataOptions = &qlik.GetDataOptions{}
 	getDataOptions.Connection = &qlik.ConnectionInfo{"host=selun-gwe.qliktech.com;database=test", "testuser","testuser"}
-	getDataOptions.Parameters = &qlik.DataInfo{"select * from airports", ""}
+	getDataOptions.Parameters = &qlik.DataInfo{"select * from manytypes", ""}
 	var t0 = makeTimestamp()
 
 	var stream, err2 = client.GetData(context.Background(), getDataOptions)

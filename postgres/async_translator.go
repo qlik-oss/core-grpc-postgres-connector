@@ -5,6 +5,8 @@ import (
 	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"time"
 	"github.com/jackc/pgx/pgtype"
+	"fmt"
+	"reflect"
 )
 
 func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType {
@@ -88,22 +90,29 @@ func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *ql
 				column.Numbers=make([]float64, rowCount)
 				for r := 0; r < len(tempQixRowList); r++ {
 					var srcValue = tempQixRowList[r][c]
-					switch tempQixRowList[0][c].(type) {
+					switch tempQixRowList[r][c].(type) {
 					case float64:
 						column.Numbers[r] = float64(srcValue.(float64))
 					case float32:
 						column.Numbers[r] = float64(srcValue.(float32))
-					case *pgtype.Numeric:
-						srcValue.(*pgtype.Numeric).AssignTo(&column.Numbers[r])
-					case *pgtype.Decimal:
-						srcValue.(*pgtype.Decimal).AssignTo(&column.Numbers[r])
+					case pgtype.Numeric:
+						var value = srcValue.(pgtype.Numeric)
+						value.AssignTo(&column.Numbers[r])
+					case pgtype.Decimal:
+						var value = srcValue.(pgtype.Decimal)
+						value.AssignTo(&column.Numbers[r])
+					default:
+						fmt.Println(srcValue)
+						fmt.Println("Unknown format", srcValue);
 					}
 				}
 			case qlik.FieldType_INTEGER:
 				column.Integers=make([]int64, rowCount)
 				for r := 0; r < len(tempQixRowList); r++ {
 					var srcValue = tempQixRowList[r][c]
-					switch tempQixRowList[0][c].(type) {
+					switch tempQixRowList[r][c].(type) {
+					case int:
+						column.Integers[r] = int64(srcValue.(int))
 					case int64:
 						column.Integers[r] = srcValue.(int64)
 					case int32:
@@ -118,16 +127,19 @@ func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *ql
 						} else {
 							column.Integers[r] = 0
 						}
+					default:
+						fmt.Println(reflect.TypeOf(srcValue))
 					}
-
 				}
 			case qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER:
 				column.Integers=make([]int64, rowCount)
 				for r := 0; r < len(tempQixRowList); r++ {
 					var srcValue = tempQixRowList[r][c]
-					switch tempQixRowList[0][c].(type) {
+					switch tempQixRowList[r][c].(type) {
 					case time.Time:
 						column.Integers[r] = srcValue.(time.Time).Unix()
+					default:
+						fmt.Println(srcValue)
 					}
 
 				}
