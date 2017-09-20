@@ -1,0 +1,33 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: golang:1.6.4
+    working_directory: ~/postgres-grpc-connector
+    environment:
+      DOCKER_REPO: qlikea/postgres-grpc-connector
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.04.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - run:
+          name: Login to Docker
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t $DOCKER_REPO:$CIRCLE_BUILD_NUM .
+      - deploy:
+          name: Push image to Docker Hub
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag $DOCKER_REPO:$CIRCLE_BUILD_NUM $DOCKER_REPO:latest
+            fi
+            docker push $DOCKER_REPO
