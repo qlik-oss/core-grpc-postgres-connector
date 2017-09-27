@@ -44,127 +44,57 @@ message GetDataOptions
 
 enum ValueFlag {
     Normal = 0;
-    Null = 1;
-}
-
-message TimestampStruct {
-    int32 year = 1;
-    int32 month = 2;     /// 1-12
-    int32 day = 3;       /// 1-31
-    int32 hour = 4;      /// 0-23
-    int32 minute = 5;    /// 0-59
-    int32 second = 6;    /// 0-59
-    int32 nanoSecond = 7;      /// 0 - 999999999
-}
-
-
-message Dual
-{
-    double numData = 1; /// Numeric value as double.
-    string strData = 2; /// String.
-    int64  intData = 3; /// Numeric value as integer.
-    ValueFlag flag = 4; /// NULL and other special cases
-    TimestampStruct timeStamp = 5; /// Date and Time as year/month/.../seconds structure
-}
-
-message Row
-{
-    repeated Dual duals = 1; /// Row of duals.
+    Null = 1;       /// NullString and NullNum
+    NullString = 2; /// Missing as opposed to empty
+    NullNum = 3;    /// Missing numerical value
 }
 
 message Column
 {
     repeated string strings = 1;
-    repeated double numbers = 2;
-    repeated int64 integers = 3;
-    repeated TimestampStruct timeStamps = 4;
-    repeated ValueFlag flags = 5;
+    repeated double doubles = 2;
+    repeated sint64 integers = 3;
+    repeated ValueFlag flags = 4;
 }
 
-message BundledRows
+message DataChunk
 {
-    repeated Row rows = 1;
-    repeated Column cols = 2;
+    repeated Column cols = 1;
+    // Warnings, Infos (for logfile and progress window)
 }
 
-enum FieldTag {
-    Name = 0;
-    Email = 1;
-    Url = 2;
-    Description = 3;
-    FileName = 4;
-    Address = 5;
-    Comment = 6;
-    PhoneNumber = 7;
-    FaxNumber = 8;
-    Quantity = 9;
-    Id = 10;
-
-    Money = 100;
-    MoneyDebit = 101; // Or Sales ?
-    MoneyCredit = 12; // Or Cost ?
-
-    Interval = 200;
-    Timestamp = 201;
-    Date = 202;
-    StartDate = 203;
-    EndDate = 204;
-
-    Customer = 300;
-    Employee = 301;
-    Contractor = 302;
-    Intern = 303;
-
-    // Meter = 400;
-    // Centimeter = 401;
-    // Millimeter = 402;
-    // Inches = 403;
-
-    USD = 500;
-    GBP = 501;
-    SEK = 502;
-    JPY = 503;
-    EUR = 504;
-    CNY = 505;
-
-
-    // XML = 19;
-    // JSON = 20;
-    // Photo = 21;
-    // Document
-    // GEO_LOCATION
-    // GEO_POINTS
-    // IP Number
-    // Guid
-    // Checksum / Hash result
+enum SemanticType {
+    DEFAULT = 0;
+    UNIX_SECONDS_SINCE_1970_UTC = 1; /// Trafered as double or integer
+    ISO_8601 = 2;                    /// Trafered as string
 }
 
+enum FieldAttrType {
+    UNKNOWN = 0;
+    TEXT = 1;
+    REAL = 2;
+    DATE = 3;
+    TIME = 4;
+    TIMESTAMP = 5;
+    INTERVAL = 6;
+    INTEGER = 10;
+    FIX = 11;
+    MONEY = 12;
+}
 
-enum FieldType
+message FieldAttributes /// Subset of classic Engine number format
 {
-    // This currently 2 enums in one
-    // 1. Data Transfer type
-    // 2. Data Interpretation type
-    TEXT = 0;
-    DOUBLE = 1;
-    INTEGER = 2;
-    UNIX_1970_SECONDS_UTC_INTEGER = 3;
-    STRUCT_TIMESTAMP = 4;
-    RFC_3339_TEXT = 5;
-    DAYS_SINCE_1900_DOUBLE = 6;
-    // DUAL; BLOB_BASE64; BLOB_HEX; DUAL_WITH_INFO;
+    FieldAttrType Type = 1;
 }
 
 message FieldInfo
 {
     string name = 1;
-    FieldType type = 2;
-    repeated FieldTag tags = 3;
-    // repeated string extraTags = 4;
+    SemanticType semanticType = 2;
+    FieldAttributes fieldAttributes = 3;
 }
 
-message GetDataResponse
-{
+message GetDataResponse{
     repeated FieldInfo fieldInfo = 1;
     string tableName = 2;
 }
@@ -172,5 +102,5 @@ message GetDataResponse
 service Connector
 {
     rpc ExecuteGenericCommand(GenericCommand) returns(GenericCommandResponse) {}
-    rpc GetData(GetDataOptions) returns(stream BundledRows) {}
+    rpc GetData(GetDataOptions) returns(stream DataChunk) {}
 }

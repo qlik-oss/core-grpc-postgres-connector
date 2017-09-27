@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"strings"
+	"strconv"
 )
 
 type PostgresReader struct  {
@@ -79,9 +80,6 @@ func (this *PostgresReader) GetData(dataOptions *qlik.GetDataOptions, stream qli
 	return nil
 }
 
-
-
-//PGHOST=localhost;PGUSER=testuser;PGPASSWORD=testuser;PGDATABASE=test
 func extractConfig(connectString string) pgx.ConnPoolConfig {
 	params := connectStringToParamsMap(connectString)
 	var config pgx.ConnPoolConfig
@@ -89,6 +87,10 @@ func extractConfig(connectString string) pgx.ConnPoolConfig {
 	config.Host = params["host"]
 	if config.Host == "" {
 		config.Host = params["hostname"]
+	}
+	if params["port"] != "" {
+		var intPort, _= strconv.Atoi(params["port"]);
+		config.Port = uint16(intPort);
 	}
 
 	config.User = params["username"]

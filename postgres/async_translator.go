@@ -9,27 +9,32 @@ import (
 	"reflect"
 )
 
-func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType {
-	var fieldTypes = make([]qlik.FieldType, len(fieldDescriptors))
-	for i, fieldDescr := range fieldDescriptors {
+func (this *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
+
+	var array = make([]*qlik.FieldInfo, len(this.fieldDescriptors))
+
+	for i, fieldDescr := range this.fieldDescriptors {
+		var semanticType = qlik.SemanticType_DEFAULT;
+		var fieldAttrType = qlik.FieldAttrType_TEXT;
 		switch fieldDescr.DataTypeName {
 		case "varchart", "text":
-			fieldTypes[i] = qlik.FieldType_TEXT
+			fieldAttrType = qlik.FieldAttrType_TEXT
 		case "int8", "int4", "char", "int2", "oid":
-			fieldTypes[i] = qlik.FieldType_INTEGER
+			fieldAttrType = qlik.FieldAttrType_INTEGER
 		case "float4", "float8":
-			fieldTypes[i] = qlik.FieldType_DOUBLE
+			fieldAttrType = qlik.FieldAttrType_REAL
 		case "timestamp", "timestampz", "date":
-			fieldTypes[i] = qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER
+			fieldAttrType = qlik.FieldAttrType_INTEGER
+			semanticType = qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC
 		case "numeric", "decimal":
-			fieldTypes[i] = qlik.FieldType_DOUBLE
+			fieldAttrType = qlik.FieldAttrType_REAL
 		case "bool":
-			fieldTypes[i] = qlik.FieldType_INTEGER
-		default:
-			fieldTypes[i] = qlik.FieldType_TEXT
+			fieldAttrType = qlik.FieldAttrType_INTEGER
 		}
+		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, semanticType, &qlik.FieldAttributes{Type: fieldAttrType}}
+
 	}
-	return fieldTypes
+	return array
 }
 
 /**
@@ -37,7 +42,7 @@ func getTypeConstants(fieldDescriptors []pgx.FieldDescription) []qlik.FieldType 
  */
 
 type AsyncTranslator struct {
-	writer *qlik.AsyncStreamWriter
+	writer           *qlik.AsyncStreamWriter
 	fieldDescriptors []pgx.FieldDescription
 	channel chan [][]interface{}
 }
@@ -48,91 +53,21 @@ func NewAsyncTranslator(writer *qlik.AsyncStreamWriter, fieldDescriptors []pgx.F
 	return this
 }
 
-func ( this *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
-	var types = getTypeConstants(this.fieldDescriptors)
-	var array = make([]*qlik.FieldInfo, len(this.fieldDescriptors))
-
-	for i := range this.fieldDescriptors {
-		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, types[i], []qlik.FieldTag{}}
-	}
+func (this *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
+	var array = this.GetTypes();
 	return &qlik.GetDataResponse{array, ""}
 }
 
-func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.BundledRows {
-	var typeConsts = getTypeConstants(this.fieldDescriptors)
+func (this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.DataChunk {
+	var types = this.GetTypes();
 	var columnCount, rowCount = len(this.fieldDescriptors), int64(len(tempQixRowList))
-	var rowBundle = qlik.BundledRows{Cols: make([]*qlik.Column, columnCount)}
+	var rowBundle = qlik.DataChunk{Cols: make([]*qlik.Column, columnCount)}
 
 	if len(tempQixRowList) > 0 {
 		for c := 0; c < columnCount; c++ {
 			var column = &qlik.Column{}
-			switch typeConsts[c] {
-			case qlik.FieldType_TEXT:
-				column.Flags=make([]qlik.ValueFlag, rowCount)
-				column.Strings=make([]string, rowCount)
-				for r := 0; r < len(tempQixRowList); r++ {
-					var srcValue = tempQixRowList[r][c]
-					if srcValue != nil {
-						switch tempQixRowList[0][c].(type) {
-						case string:
-							column.Strings[r] = srcValue.(string)
-							column.Flags[r] = qlik.ValueFlag_Normal
-						default:
-							column.Strings[r] = "<Unsupported format>"
-							column.Flags[r] = qlik.ValueFlag_Normal
-						}
-					} else {
-						column.Strings[r] = ""
-						column.Flags[r] = qlik.ValueFlag_Null
-					}
-				}
-			case qlik.FieldType_DOUBLE:
-				column.Numbers=make([]float64, rowCount)
-				for r := 0; r < len(tempQixRowList); r++ {
-					var srcValue = tempQixRowList[r][c]
-					switch tempQixRowList[r][c].(type) {
-					case float64:
-						column.Numbers[r] = float64(srcValue.(float64))
-					case float32:
-						column.Numbers[r] = float64(srcValue.(float32))
-					case pgtype.Numeric:
-						var value = srcValue.(pgtype.Numeric)
-						value.AssignTo(&column.Numbers[r])
-					case pgtype.Decimal:
-						var value = srcValue.(pgtype.Decimal)
-						value.AssignTo(&column.Numbers[r])
-					default:
-						fmt.Println(srcValue)
-						fmt.Println("Unknown format", srcValue);
-					}
-				}
-			case qlik.FieldType_INTEGER:
-				column.Integers=make([]int64, rowCount)
-				for r := 0; r < len(tempQixRowList); r++ {
-					var srcValue = tempQixRowList[r][c]
-					switch tempQixRowList[r][c].(type) {
-					case int:
-						column.Integers[r] = int64(srcValue.(int))
-					case int64:
-						column.Integers[r] = srcValue.(int64)
-					case int32:
-						column.Integers[r] = int64(srcValue.(int32))
-					case int16:
-						column.Integers[r] = int64(srcValue.(int16))
-					case int8:
-						column.Integers[r] = int64(srcValue.(int8))
-					case bool:
-						if srcValue.(bool) {
-							column.Integers[r] = -1
-						} else {
-							column.Integers[r] = 0
-						}
-					default:
-						fmt.Println(reflect.TypeOf(srcValue))
-					}
-				}
-			case qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER:
-				column.Integers=make([]int64, rowCount)
+			if types[c].SemanticType == qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC {
+				column.Integers = make([]int64, rowCount)
 				for r := 0; r < len(tempQixRowList); r++ {
 					var srcValue = tempQixRowList[r][c]
 					switch tempQixRowList[r][c].(type) {
@@ -141,7 +76,73 @@ func ( this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *ql
 					default:
 						fmt.Println(srcValue)
 					}
-
+				}
+			} else {
+				switch types[c].FieldAttributes.Type {
+				case qlik.FieldAttrType_TEXT:
+					column.Flags = make([]qlik.ValueFlag, rowCount)
+					column.Strings = make([]string, rowCount)
+					for r := 0; r < len(tempQixRowList); r++ {
+						var srcValue = tempQixRowList[r][c]
+						if srcValue != nil {
+							switch tempQixRowList[0][c].(type) {
+							case string:
+								column.Strings[r] = srcValue.(string)
+								column.Flags[r] = qlik.ValueFlag_Normal
+							default:
+								column.Strings[r] = "<Unsupported format>"
+								column.Flags[r] = qlik.ValueFlag_Normal
+							}
+						} else {
+							column.Strings[r] = ""
+							column.Flags[r] = qlik.ValueFlag_Null
+						}
+					}
+				case qlik.FieldAttrType_REAL:
+					column.Doubles = make([]float64, rowCount)
+					for r := 0; r < len(tempQixRowList); r++ {
+						var srcValue = tempQixRowList[r][c]
+						switch tempQixRowList[r][c].(type) {
+						case float64:
+							column.Doubles[r] = float64(srcValue.(float64))
+						case float32:
+							column.Doubles[r] = float64(srcValue.(float32))
+						case pgtype.Numeric:
+							var value = srcValue.(pgtype.Numeric)
+							value.AssignTo(&column.Doubles[r])
+						case pgtype.Decimal:
+							var value = srcValue.(pgtype.Decimal)
+							value.AssignTo(&column.Doubles[r])
+						default:
+							fmt.Println(srcValue)
+							fmt.Println("Unknown format", srcValue);
+						}
+					}
+				case qlik.FieldAttrType_INTEGER:
+					column.Integers = make([]int64, rowCount)
+					for r := 0; r < len(tempQixRowList); r++ {
+						var srcValue = tempQixRowList[r][c]
+						switch tempQixRowList[r][c].(type) {
+						case int:
+							column.Integers[r] = int64(srcValue.(int))
+						case int64:
+							column.Integers[r] = srcValue.(int64)
+						case int32:
+							column.Integers[r] = int64(srcValue.(int32))
+						case int16:
+							column.Integers[r] = int64(srcValue.(int16))
+						case int8:
+							column.Integers[r] = int64(srcValue.(int8))
+						case bool:
+							if srcValue.(bool) {
+								column.Integers[r] = -1
+							} else {
+								column.Integers[r] = 0
+							}
+						default:
+							fmt.Println(reflect.TypeOf(srcValue))
+						}
+					}
 				}
 			}
 			rowBundle.Cols[c] = column

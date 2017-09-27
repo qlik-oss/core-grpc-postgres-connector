@@ -57,23 +57,27 @@ func TestAsyncTranslator(t *testing.T) {
 
 var _ = Describe("AsyncTranslator", func() {
 	Context("Translate fieldDscriptions", func() {
-		var typeConstants = getTypeConstants(fieldDescriptions)
+		var asyncTranslator = AsyncTranslator{ fieldDescriptors: fieldDescriptions}
+		var typeConstants = asyncTranslator.GetDataResponseMetadata().FieldInfo
 		It("should match the expected type constants", func() {
-			Expect(typeConstants[0]).To(Equal(qlik.FieldType_TEXT))
-			Expect(typeConstants[1]).To(Equal(qlik.FieldType_TEXT))
-			Expect(typeConstants[2]).To(Equal(qlik.FieldType_INTEGER))
-			Expect(typeConstants[3]).To(Equal(qlik.FieldType_INTEGER))
-			Expect(typeConstants[4]).To(Equal(qlik.FieldType_INTEGER))
-			Expect(typeConstants[5]).To(Equal(qlik.FieldType_INTEGER))
-			Expect(typeConstants[6]).To(Equal(qlik.FieldType_INTEGER))
-			Expect(typeConstants[7]).To(Equal(qlik.FieldType_DOUBLE))
-			Expect(typeConstants[8]).To(Equal(qlik.FieldType_DOUBLE))
-			Expect(typeConstants[9]).To(Equal(qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER))
-			Expect(typeConstants[10]).To(Equal(qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER))
-			Expect(typeConstants[11]).To(Equal(qlik.FieldType_UNIX_1970_SECONDS_UTC_INTEGER))
-			Expect(typeConstants[12]).To(Equal(qlik.FieldType_DOUBLE))
-			Expect(typeConstants[13]).To(Equal(qlik.FieldType_DOUBLE))
-			Expect(typeConstants[14]).To(Equal(qlik.FieldType_INTEGER))
+			Expect(typeConstants[0].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_TEXT))
+			Expect(typeConstants[1].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_TEXT))
+			Expect(typeConstants[2].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[3].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[4].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[5].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[6].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[7].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
+			Expect(typeConstants[8].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
+			Expect(typeConstants[9].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[9].SemanticType).To(Equal(qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC))
+			Expect(typeConstants[10].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[10].SemanticType).To(Equal(qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC))
+			Expect(typeConstants[11].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[11].SemanticType).To(Equal(qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC))
+			Expect(typeConstants[12].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
+			Expect(typeConstants[13].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
+			Expect(typeConstants[14].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
 		})
 	})
 
@@ -82,7 +86,7 @@ var _ = Describe("AsyncTranslator", func() {
 		var bundle = asyncTranslator.buildRowBundle(postgresRowData)
 
 
-		var expectedBundle = qlik.BundledRows{Cols: []*qlik.Column {
+		var expectedBundle = qlik.DataChunk{Cols: []*qlik.Column {
 			{Strings: []string {"varchar"}, Flags:[]qlik.ValueFlag{qlik.ValueFlag_Normal}},
 			{Strings: []string {"text"}, Flags:[]qlik.ValueFlag{qlik.ValueFlag_Normal}},
 			{Integers: []int64 {8}},
@@ -90,13 +94,13 @@ var _ = Describe("AsyncTranslator", func() {
 			{Integers: []int64 {2}},
 			{Integers: []int64 {1}},
 			{Integers: []int64 {9}},
-			{Numbers: []float64 {2.4}},
-			{Numbers: []float64 {4.8}},
+			{Doubles: []float64 {2.4}},
+			{Doubles: []float64 {4.8}},
 			{Integers: []int64 {int64(time1.Unix())}},
 			{Integers: []int64 {int64(time1.Unix())}},
 			{Integers: []int64 {int64(time1.Unix())}},
-			{Numbers: []float64 {0}},
-			{Numbers: []float64 {0}},
+			{Doubles: []float64 {0}},
+			{Doubles: []float64 {0}},
 			{Integers: []int64 {-1}},
 		}}
 

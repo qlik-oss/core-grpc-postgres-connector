@@ -1,0 +1,23 @@
+version: "3.3"
+
+services:
+  postgres-grpc-connector:
+    container_name: postgres-grpc-connector
+    image: qlikea/postgres-grpc-connector:dev
+    links:
+      - postgres-database
+    ports:
+      - 50051:50051
+  postgres-database:
+    container_name: postgres-database
+    image: qlik-ea/postgres-grpc-connector-database:dev
+    ports:
+      - 5433:5432
+  qix-engine:
+    container_name: qix-engine
+    image: qlik/engine:12.63.1-dev.20-3872544
+    links:
+      - postgres-grpc-connector
+    ports:
+      - 19076:19076
+    command: --legacyreload -P 19076 -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="Postgres,postgres-grpc-connector:50051" -S EnableConnectivityService=0 -N

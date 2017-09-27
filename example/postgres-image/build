@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker build . -t qlik-ea/postgres-grpc-connector-database:dev
