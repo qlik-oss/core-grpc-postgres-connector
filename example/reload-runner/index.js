@@ -9,23 +9,23 @@ const session = enigma.create({
 	createSocket: url => new WebSocket(url),
 });
 
-// bind traffic events to log what is sent and received on the socket:
-session.on('traffic:sent', data => console.log('sent:', data));
-session.on('traffic:received', data => console.log('received:', data));
-
-// open the socket and eventually receive the QIX global API, and then close
-// the session:
-
-
 var global
 var app;
 var reloadRequestId;
-var appId = "app6.qvf";
-session.open()
+var appId = "reloadapp.qvf";
+var connectionId;
+var trafficLog = false;
 
+if (trafficLog) {
+	// bind traffic events to log what is sent and received on the socket:
+ 	session.on('traffic:sent', data => console.log('sent:', data));
+	session.on('traffic:received', data => console.log('received:', data));
+}
+
+session.open()
 	.then((_global) => {
 		global = _global;
-		console.log('Creating session app');
+		console.log('Creating/opening app');
 		return global.createApp(appId).then( (appInfo) => {
 			return global.openDoc(appInfo.qAppId)
 		}).catch( (err) => {
@@ -37,19 +37,19 @@ session.open()
 		app = _app;
 		return app.createConnection({
 			qType: 'Postgres',
-			qName: 'postgresgrpc2',
+			qName: 'postgresgrpc',
 			qConnectionString: 'CUSTOM CONNECT TO "provider=Postgres;host=postgres-database;port=5432;database=postgres;user=postgres;password=postgres"',
-			//qConnectionString: 'CUSTOM CONNECT TO "provider=Postgres;host=selun-gwe.qliktech.com;port=5433;database=postgres;user=postgres;password=postgres"',
 			qUserName: 'postgres',
 			qPassword: 'postgres'
 		})
 	})
-	.then(() => {
+	.then((_connectionId) => {
+		connectionId = _connectionId;
 		console.log('Setting script');
 		const script = `
-			lib connect to 'postgresgrpc2';		
+			lib connect to 'postgresgrpc';		
 			Airports:						
-			sql select * from airports;
+			sql select rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() from airports;
 		`;
 		return app.setScript(script);
 	})
@@ -64,6 +64,18 @@ session.open()
 	})
 	.then((progress) => {
 
+	})
+	.then(() => {
+		console.log('Removing connection before saving');
+		return app.deleteConnection(connectionId)
+	})
+	.then(() => {
+		console.log('Removing script before saving');
+		return app.setScript("");
+	})
+	.then(() => {
+		console.log('Saving');
+		return app.doSave()
 	})
 	.then(() => {
 		console.log('Fetching Table sample');

@@ -23,8 +23,11 @@ func (this *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
 			fieldAttrType = qlik.FieldAttrType_INTEGER
 		case "float4", "float8":
 			fieldAttrType = qlik.FieldAttrType_REAL
-		case "timestamp", "timestampz", "date":
-			fieldAttrType = qlik.FieldAttrType_INTEGER
+		case "timestamp", "timestamptz":
+			fieldAttrType = qlik.FieldAttrType_TIMESTAMP
+			semanticType = qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC
+		case "date":
+			fieldAttrType = qlik.FieldAttrType_DATE
 			semanticType = qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC
 		case "numeric", "decimal":
 			fieldAttrType = qlik.FieldAttrType_REAL
