@@ -15,7 +15,7 @@ services:
       - 5433:5432
   qix-engine:
     container_name: qix-engine
-    image: qlik/engine:12.63.1-dev.20-3872544
+    image: qlikea/engine:12.63.1-dev.20-3872544
     links:
       - postgres-grpc-connector
     ports:
