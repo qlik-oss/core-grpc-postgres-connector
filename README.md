@@ -2,6 +2,6 @@
 
 A POC to validate that it is possible to write a custom connector without the qvx protocol using GRPC.
 
-## Example
+*Requires Engine version 12.71.0 or newer*
 
-[An example of a reload with the QIX Engine docker using GRPC to a PostgreSQL connector](/example/README.md)
+See the example implementation how connect QIX Engine and a custom postgres connector using the gRPC protocol](/example/README.md)
