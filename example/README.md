@@ -7,7 +7,7 @@ Example of e2e communication between QIX Engine and a PostgreSQL DB using then n
 Run in a \*nix environment (or Git Bash if on Windows):
 
 ```bash
-$ cd posgres-image
+$ cd postgres-image
 $ ./build
 $ cd ..
 $ docker-compose up -d
