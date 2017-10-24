@@ -36,9 +36,9 @@ session.open()
 		console.log('Creating connection');
 		app = _app;
 		return app.createConnection({
-			qType: 'Postgres',
+			qType: 'postgrea-grpc-connector',
 			qName: 'postgresgrpc',
-			qConnectionString: 'CUSTOM CONNECT TO "provider=Postgres;host=postgres-database;port=5432;database=postgres;user=postgres;password=postgres"',
+			qConnectionString: 'CUSTOM CONNECT TO "provider=postgrea-grpc-connector;host=postgres-database;port=5432;database=postgres;user=postgres;password=postgres"',
 			qUserName: 'postgres',
 			qPassword: 'postgres'
 		})
