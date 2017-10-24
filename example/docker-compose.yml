@@ -8,7 +8,7 @@ services:
     image: example/postgres-grpc-connector-database
   qix-engine:
     container_name: qix-engine
-    image: qlikea/engine:12.71.0
+    image: qlikea/engine:12.84.0
     ports:
       - 9076:9076
-    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgrea-grpc-connector,postgres-grpc-connector:50051"
+    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
