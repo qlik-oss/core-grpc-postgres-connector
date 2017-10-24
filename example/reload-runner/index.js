@@ -5,7 +5,7 @@ var enigma = require('enigma.js')
 // create a new session:
 const session = enigma.create({
 	schema,
-	url: 'ws://localhost:19076/app/engineData',
+	url: 'ws://localhost:9076/app/engineData',
 	createSocket: url => new WebSocket(url),
 });
 
