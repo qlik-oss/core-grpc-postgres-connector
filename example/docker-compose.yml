@@ -1,11 +1,11 @@
 version: "3.3"
 services:
-  postgres-grpc-connector:
-    container_name: postgres-grpc-connector
-    image: qlikea/postgres-grpc-connector:latest
   postgres-database:
     container_name: postgres-database
     image: example/postgres-grpc-connector-database
+  postgres-grpc-connector:
+    container_name: postgres-grpc-connector
+    image: qlikea/postgres-grpc-connector:latest
   qix-engine:
     container_name: qix-engine
     image: qlikea/engine:12.84.0
