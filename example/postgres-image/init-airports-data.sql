@@ -1,6 +1,6 @@
 CREATE TABLE airports
 (
-  rowid integer,
+  rowID integer,
   airport character varying(250),
   city character varying(250),
   country character varying(250),
@@ -13,5 +13,4 @@ CREATE TABLE airports
   dst character varying(50),
   tz character varying(50)
 );
-
-COPY airports(rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ) FROM '/airports.csv' DELIMITER ',' CSV HEADER;
+COPY airports FROM '/airports.csv' DELIMITER ',' CSV HEADER;
