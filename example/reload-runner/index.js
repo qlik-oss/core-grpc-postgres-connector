@@ -39,7 +39,7 @@ session.open()
 			qType: 'postgres-grpc-connector', //the name we defined as a parameter to engine in our docker-compose.yml
 			qName: 'postgresgrpc',
 			qConnectionString: 'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=postgres-database;port=5432;database=postgres"', //the connection string inclues both the provide to use and parameters to it.
-			qUserName: 'postgres', //username and password for the postgres database
+			qUserName: 'postgres', //username and password for the postgres database, provided to the GRPC-Connector
 			qPassword: 'postgres'
 		})
 	})
