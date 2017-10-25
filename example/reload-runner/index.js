@@ -38,7 +38,7 @@ session.open()
 		return app.createConnection({
 			qType: 'postgres-grpc-connector', //the name we defined as a parameter to engine in our docker-compose.yml
 			qName: 'postgresgrpc',
-			qConnectionString: 'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=postgres-database;port=5432;database=postgres;user=postgres;password=postgres"', //the connection string inclues both the provide to use and parameters to it.
+			qConnectionString: 'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=postgres-database;port=5432;database=postgres"', //the connection string inclues both the provide to use and parameters to it.
 			qUserName: 'postgres',
 			qPassword: 'postgres'
 		})
@@ -47,7 +47,7 @@ session.open()
 		connectionId = _connectionId;
 		console.log('Setting script');
 		const script = `
-			lib connect to 'postgresgrpc';		
+			lib connect to 'postgresgrpc';	
 			Airports:						
 			sql select rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() from airports;
 		`; // add script to use the grpc-connector and load a table
