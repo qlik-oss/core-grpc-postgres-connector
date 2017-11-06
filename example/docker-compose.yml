@@ -2,7 +2,7 @@ version: "3.3"
 services:
   postgres-database:
     container_name: postgres-database
-    image: example/postgres-grpc-connector-database
+    build: postgres-image/
   postgres-grpc-connector:
     container_name: postgres-grpc-connector
     image: qlikea/postgres-grpc-connector:latest
