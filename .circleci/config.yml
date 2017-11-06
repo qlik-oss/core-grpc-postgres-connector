@@ -57,7 +57,8 @@ jobs:
             curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
       - run:
-          name: Run integration tests on a local setup
+          name: Spin up environment 
+          working_directory: ~/postgres-grpc-connector/example
           command: |
             docker-compose up -d
             docker ps
