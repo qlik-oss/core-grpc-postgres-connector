@@ -13,7 +13,7 @@ jobs:
           name: Install Docker client
           command: |
             set -x
-            VER="17.04.0-ce"
+            VER="17.09.0-ce"
             curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             mv /tmp/docker/* /usr/bin
@@ -40,14 +40,19 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - run:
-          name: Import previously built docker image
-          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
       - checkout
       - setup_remote_docker
       - run:
           name: Install Docker client
-          command: ./scripts/cci2-install-docker-client.sh 17.09.0-ce
+          command: |
+            set -x
+            VER="17.09.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - run:
+          name: Import previously built docker image
+          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
       - run:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
@@ -61,6 +66,7 @@ jobs:
           name: Run integration tests on a local setup
           command: |
             docker-compose up -d
+            docker ps
 
 workflows:
   version: 2
