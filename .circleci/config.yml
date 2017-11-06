@@ -25,6 +25,11 @@ jobs:
           command: |
             VER="0.0.1-$CIRCLE_BUILD_NUM"
             docker build -t $DOCKER_REPO:$VER .
+            docker save $DOCKER_REPO:$VER -o workspace/postgres-grpc-connector_image.tar
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - workspace/postgres-grpc-connector_image.tar
       - deploy:
           name: Push image to Docker Hub
           command: |
@@ -33,3 +38,46 @@ jobs:
               docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
             fi
             docker push $DOCKER_REPO
+    test:
+      docker:
+        - image: node:8
+      working_directory: ~/postgres-grpc-connector
+      environment:
+        DOCKER_REPO: qlikea/postgres-grpc-connector
+      steps:
+        - attach_workspace:
+            at: /tmp/workspace
+        - run:
+            name: Import previously built docker image
+            command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
+        - checkout
+        - setup_remote_docker
+        - run:
+            name: Install Docker client
+            command: ./scripts/cci2-install-docker-client.sh 17.09.0-ce
+        - run:
+            name: Login to Docker
+            command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+        - run:
+            name: Install Docker Compose
+            command: |
+              set -x
+              curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+              chmod +x /usr/local/bin/docker-compose
+        - run:
+            name: Run integration tests on a local setup
+            command: |
+              docker-compose up -d
+
+workflows:
+  version: 2
+  build_test_and_deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      # - publish:
+      #     requires:
+      #       - test
+
