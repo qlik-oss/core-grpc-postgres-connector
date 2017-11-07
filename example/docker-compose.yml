@@ -18,4 +18,5 @@ services:
     working_dir: /reload-runner
     volumes:
       - ./reload-runner:/reload-runner
-    command: "npm install && npm start"
+    # Creating node busybox
+    command: "sh -c 'while :; do ping -c 1 google.com; sleep 60; done'"

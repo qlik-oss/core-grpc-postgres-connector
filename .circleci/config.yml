@@ -64,6 +64,11 @@ jobs:
             docker-compose up -d
             docker ps
             docker image ls
+      - run:
+          name: Execute tests on remote dockers
+          command: |
+            docker exec node-test-runner 'npm install -s'
+            docker exec node-test-runner 'npm run start:ci -s' 
 
 workflows:
   version: 2
