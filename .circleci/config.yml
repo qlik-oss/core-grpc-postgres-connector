@@ -60,8 +60,10 @@ jobs:
           name: Spin up environment 
           working_directory: ~/postgres-grpc-connector/example
           command: |
+            docker image ls
             docker-compose up -d
             docker ps
+            docker image ls
 
 workflows:
   version: 2
