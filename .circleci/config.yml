@@ -67,8 +67,8 @@ jobs:
       - run:
           name: Execute tests on remote dockers
           command: |
-            docker exec node-test-runner 'npm install -s'
-            docker exec node-test-runner 'npm run start:ci -s' 
+            docker exec node-test-runner sh -c 'npm install'
+            docker exec node-test-runner sh -c 'npm run start:ci -s'
 
 workflows:
   version: 2
