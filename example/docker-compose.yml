@@ -16,6 +16,7 @@ services:
     container_name: node-test-runner
     image: node:8
     working_dir: /reload-runner
+    # Not working in circleCI, using cp instead to get test files 
     volumes:
       - ./reload-runner:/reload-runner
     # Creating node busybox

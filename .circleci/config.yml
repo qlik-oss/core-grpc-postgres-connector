@@ -60,13 +60,14 @@ jobs:
           name: Spin up environment 
           working_directory: ~/postgres-grpc-connector/example
           command: |
-            docker image ls
             docker-compose up -d
             docker ps
             docker image ls
       - run:
           name: Execute tests on remote dockers
+          working_directory: ~/postgres-grpc-connector/example/reload-runner
           command: |
+            docker cp ./ node-test-runner:./
             docker exec node-test-runner sh -c 'npm install'
             docker exec node-test-runner sh -c 'npm run start:ci -s'
 
