@@ -67,7 +67,7 @@ jobs:
           name: Execute tests on remote dockers
           working_directory: ~/postgres-grpc-connector/example/reload-runner
           command: |
-            docker cp ./ node-test-runner:./
+            docker cp ./ node-test-runner:./reload-runner/
             docker exec node-test-runner sh -c 'npm install'
             docker exec node-test-runner sh -c 'npm run start:ci -s'
 
