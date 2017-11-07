@@ -15,5 +15,7 @@ services:
   node-test-runner:
     container_name: node-test-runner
     image: node:8
+    working_dir: /reload-runner
     volumes:
       - ./reload-runner:/reload-runner
+    command: "npm install && npm start"
