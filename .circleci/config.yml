@@ -23,7 +23,7 @@ jobs:
             mkdir -p workspace
             VER="0.0.1-$CIRCLE_BUILD_NUM"
             docker build -t $DOCKER_REPO:$VER -t $DOCKER_REPO:latest .
-            docker save $DOCKER_REPO:$VER -o workspace/postgres-grpc-connector_image.tar
+            docker save $DOCKER_REPO:latest -o workspace/postgres-grpc-connector_image.tar
       - persist_to_workspace:
           root: workspace
           paths:
