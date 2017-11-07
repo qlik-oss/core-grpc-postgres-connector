@@ -64,6 +64,11 @@ jobs:
             docker-compose up -d
             docker ps
             docker image ls
+      - run:
+          name: Run tests in node container
+          command: |
+            docker exec node-test-runner 'cd /reload-runner && npm install'
+            docker exec node-test-runner 'cd /reload-runner && npm start'
 
 workflows:
   version: 2
