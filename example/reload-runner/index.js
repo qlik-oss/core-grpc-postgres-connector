@@ -1,11 +1,12 @@
 const WebSocket = require('ws');
 const schema = require('enigma.js/schemas/12.20.0.json');
 var enigma = require('enigma.js')
+const host = process.argv.slice(2)[0] || 'localhost';
 
 // create a new session:
 const session = enigma.create({
 	schema,
-	url: 'ws://localhost:9076/app/engineData',
+	url: `ws://${host}:9076/app/engineData`,
 	createSocket: url => new WebSocket(url),
 });
 
@@ -63,7 +64,6 @@ session.open()
 		return global.getProgress(reloadRequestId)
 	})
 	.then((progress) => {
-
 	})
 	.then(() => {
 		console.log('Removing connection before saving');
@@ -88,4 +88,7 @@ session.open()
 	})
 	.then(() => session.close())
 	.then(() => console.log('Session closed'))
-	.catch(err => console.log('Something went wrong :(', err))
+	.catch(err => {
+		console.log('Something went wrong :(', err);
+		process.exit(1);
+	})
