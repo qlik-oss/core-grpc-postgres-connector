@@ -64,7 +64,6 @@ session.open()
 		return global.getProgress(reloadRequestId)
 	})
 	.then((progress) => {
-
 	})
 	.then(() => {
 		console.log('Removing connection before saving');
@@ -89,4 +88,7 @@ session.open()
 	})
 	.then(() => session.close())
 	.then(() => console.log('Session closed'))
-	.catch(err => console.log('Something went wrong :(', err))
+	.catch(err => {
+		console.log('Something went wrong :(', err);
+		process.exit(1);
+	})
