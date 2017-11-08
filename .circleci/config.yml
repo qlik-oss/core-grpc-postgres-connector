@@ -62,7 +62,7 @@ jobs:
           name: Spin up environment 
           working_directory: ~/postgres-grpc-connector/example
           command: |
-            VER=$(cat workspace/version.txt)
+            VER=$(cat /tmp/workspace/version.txt)
             TAG=:${VER} docker-compose up -d
             docker ps
             docker image ls
@@ -112,7 +112,7 @@ workflows:
       - test:
           requires:
             - build
-      # - publish:
-      #     requires:
-      #       - test
+      - publish:
+          requires:
+            - test
 
