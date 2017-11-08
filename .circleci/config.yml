@@ -12,24 +12,107 @@ jobs:
       - run:
           name: Install Docker client
           command: |
-            set -x
-            VER="17.04.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
+            curl -fsSL get.docker.com -o get-docker.sh
+            sh get-docker.sh
       - run:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
           name: Build Docker Image
           command: |
+            mkdir -p workspace
             VER="0.0.1-$CIRCLE_BUILD_NUM"
+            echo "$VER" > workspace/version.txt
             docker build -t $DOCKER_REPO:$VER .
-      - deploy:
+            docker save $DOCKER_REPO:$VER -o workspace/postgres-grpc-connector_image.tar
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - version.txt
+            - postgres-grpc-connector_image.tar
+  test:
+    docker:
+      - image: node:8
+    working_directory: ~/postgres-grpc-connector
+    environment:
+      DOCKER_REPO: qlikea/postgres-grpc-connector
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            curl -fsSL get.docker.com -o get-docker.sh
+            sh get-docker.sh
+      - run:
+          name: Import previously built docker image
+          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
+      - run:
+          name: Login to Docker
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      - run:
+          name: Install Docker Compose
+          command: |
+            set -x
+            curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Spin up environment 
+          working_directory: ~/postgres-grpc-connector/example
+          command: |
+            VER=$(cat /tmp/workspace/version.txt)
+            TAG=:${VER} docker-compose up -d
+            docker ps
+            docker image ls
+      - run:
+          name: Execute tests on remote dockers
+          working_directory: ~/postgres-grpc-connector/example/reload-runner
+          command: |
+            docker cp ./ node-test-runner:./reload-runner/
+            docker exec node-test-runner sh -c 'npm install'
+            docker exec node-test-runner sh -c 'npm run start:ci -s'
+  # Job for publishing Docker image to Docker hub
+  publish:
+    docker:
+      - image: node:8
+    working_directory: ~/postgres-grpc-connector
+    environment:
+      DOCKER_REPO: qlikea/postgres-grpc-connector
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            curl -fsSL get.docker.com -o get-docker.sh
+            sh get-docker.sh
+      - run:
+          name: Import previously built docker image
+          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
+      - run:
+          name: Login to Docker
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      - run:
           name: Push image to Docker Hub
           command: |
-            VER="0.0.1-$CIRCLE_BUILD_NUM"
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              VER=$(cat /tmp/workspace/version.txt)
               docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
             fi
             docker push $DOCKER_REPO
+
+workflows:
+  version: 2
+  build_test_and_deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - publish:
+          requires:
+            - test
+

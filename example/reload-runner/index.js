@@ -1,11 +1,12 @@
 const WebSocket = require('ws');
 const schema = require('enigma.js/schemas/12.20.0.json');
 var enigma = require('enigma.js')
+const host = process.argv.slice(2)[0] || 'localhost';
 
 // create a new session:
 const session = enigma.create({
 	schema,
-	url: 'ws://localhost:19076/app/engineData',
+	url: `ws://${host}:9076/app/engineData`,
 	createSocket: url => new WebSocket(url),
 });
 
@@ -36,10 +37,10 @@ session.open()
 		console.log('Creating connection');
 		app = _app;
 		return app.createConnection({
-			qType: 'Postgres',
+			qType: 'postgres-grpc-connector', //the name we defined as a parameter to engine in our docker-compose.yml
 			qName: 'postgresgrpc',
-			qConnectionString: 'CUSTOM CONNECT TO "provider=Postgres;host=postgres-database;port=5432;database=postgres;user=postgres;password=postgres"',
-			qUserName: 'postgres',
+			qConnectionString: 'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=postgres-database;port=5432;database=postgres"', //the connection string inclues both the provide to use and parameters to it.
+			qUserName: 'postgres', //username and password for the postgres database, provided to the GRPC-Connector
 			qPassword: 'postgres'
 		})
 	})
@@ -47,10 +48,10 @@ session.open()
 		connectionId = _connectionId;
 		console.log('Setting script');
 		const script = `
-			lib connect to 'postgresgrpc';		
+			lib connect to 'postgresgrpc';	
 			Airports:						
 			sql select rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() from airports;
-		`;
+		`; // add script to use the grpc-connector and load a table
 		return app.setScript(script);
 	})
 	.then(() => {
@@ -63,7 +64,6 @@ session.open()
 		return global.getProgress(reloadRequestId)
 	})
 	.then((progress) => {
-
 	})
 	.then(() => {
 		console.log('Removing connection before saving');
@@ -79,7 +79,7 @@ session.open()
 	})
 	.then(() => {
 		console.log('Fetching Table sample');
-		return app.getTableData(-1, 50, true, "Airports")
+		return app.getTableData(-1, 10, true, "Airports")
 	})
 	.then((tableData) => {
 		//Convert table grid into a string using some functional magic
@@ -88,4 +88,7 @@ session.open()
 	})
 	.then(() => session.close())
 	.then(() => console.log('Session closed'))
-	.catch(err => console.log('Something went wrong :(', err))
+	.catch(err => {
+		console.log('Something went wrong :(', err);
+		process.exit(1);
+	})

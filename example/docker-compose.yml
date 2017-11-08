@@ -1,23 +1,23 @@
 version: "3.3"
-
 services:
-  postgres-grpc-connector:
-    container_name: postgres-grpc-connector
-    image: qlikea/postgres-grpc-connector:dev
-    links:
-      - postgres-database
-    expose:
-      - 50051
   postgres-database:
     container_name: postgres-database
-    image: qlik-ea/postgres-grpc-connector-database:dev
-    ports:
-      - 5433:5432
+    build: postgres-image/
+  postgres-grpc-connector:
+    container_name: postgres-grpc-connector
+    image: qlikea/postgres-grpc-connector${TAG}
   qix-engine:
     container_name: qix-engine
-    image: qlikea/engine:12.63.1-dev.20-3872544
-    links:
-      - postgres-grpc-connector
+    image: qlikea/engine:12.84.0
     ports:
-      - 19076:19076
-    command: --legacyreload -P 19076 -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="Postgres,postgres-grpc-connector:50051" -S EnableConnectivityService=0 -N
+      - 9076:9076
+    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
+  node-test-runner:
+    container_name: node-test-runner
+    image: node:8
+    working_dir: /reload-runner
+    # Not working in circleCI, using cp instead to get test files 
+    volumes:
+      - ./reload-runner:/reload-runner
+    # Creating node busybox
+    command: "sh -c 'while :; do ping -c 1 google.com; sleep 60; done'"

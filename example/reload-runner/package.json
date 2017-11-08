@@ -5,6 +5,8 @@
   "author": "QlikTech International AB",
   "license": "MIT",
   "scripts": {
+    "start": "node index.js",
+    "start:ci": "node index.js qix-engine",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },
