@@ -22,11 +22,13 @@ jobs:
           command: |
             mkdir -p workspace
             VER="0.0.1-$CIRCLE_BUILD_NUM"
-            docker build -t $DOCKER_REPO:$VER -t $DOCKER_REPO:latest .
-            docker save $DOCKER_REPO:latest -o workspace/postgres-grpc-connector_image.tar
+            echo "$VER" > workspace/version.txt
+            docker build -t $DOCKER_REPO:$VER .
+            docker save $DOCKER_REPO:$VER -o workspace/postgres-grpc-connector_image.tar
       - persist_to_workspace:
           root: workspace
           paths:
+            - version.txt
             - postgres-grpc-connector_image.tar
   test:
     docker:
@@ -60,7 +62,8 @@ jobs:
           name: Spin up environment 
           working_directory: ~/postgres-grpc-connector/example
           command: |
-            docker-compose up -d
+            VER=$(cat workspace/version.txt)
+            TAG=:${VER} docker-compose up -d
             docker ps
             docker image ls
       - run:
@@ -70,6 +73,36 @@ jobs:
             docker cp ./ node-test-runner:./reload-runner/
             docker exec node-test-runner sh -c 'npm install'
             docker exec node-test-runner sh -c 'npm run start:ci -s'
+  # Job for publishing Docker image to Docker hub
+  publish:
+    docker:
+      - image: node:8
+    working_directory: ~/postgres-grpc-connector
+    environment:
+      DOCKER_REPO: qlikea/postgres-grpc-connector
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            curl -fsSL get.docker.com -o get-docker.sh
+            sh get-docker.sh
+      - run:
+          name: Import previously built docker image
+          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
+      - run:
+          name: Login to Docker
+          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      - run:
+          name: Push image to Docker Hub
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              VER=$(cat /tmp/workspace/version.txt)
+              docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
+            fi
+            docker push $DOCKER_REPO
 
 workflows:
   version: 2
