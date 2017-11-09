@@ -86,7 +86,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      # - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.10.0-ce
       - run:
           name: Install Docker client
           command: |
