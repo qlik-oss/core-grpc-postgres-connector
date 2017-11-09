@@ -2,21 +2,19 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.6.4
+      - image: golang:1.9
     working_directory: ~/postgres-grpc-connector
     environment:
       DOCKER_REPO: qlikea/postgres-grpc-connector
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.10.0-ce
       - run:
           name: Install Docker client
           command: |
             curl -fsSL get.docker.com -o get-docker.sh
             sh get-docker.sh
-      - run:
-          name: Login to Docker
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
           name: Build Docker Image
           command: |
@@ -40,7 +38,8 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.10.0-ce
       - run:
           name: Install Docker client
           command: |
@@ -83,7 +82,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.10.0-ce
       - run:
           name: Install Docker client
           command: |
