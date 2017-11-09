@@ -15,10 +15,6 @@ jobs:
           command: |
             curl -fsSL get.docker.com -o get-docker.sh
             sh get-docker.sh
-            docker version
-      # - run:
-      #     name: Login to Docker
-      #     command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
           name: Build Docker Image
           command: |
