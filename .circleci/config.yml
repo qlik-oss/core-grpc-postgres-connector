@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-        version: 17.10.0-ce
+          version: 17.10.0-ce
       - run:
           name: Install Docker client
           command: |
