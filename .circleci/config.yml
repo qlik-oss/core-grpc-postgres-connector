@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.6.4
+      - image: golang:1.9
     working_directory: ~/postgres-grpc-connector
     environment:
       DOCKER_REPO: qlikea/postgres-grpc-connector
@@ -14,6 +14,7 @@ jobs:
           command: |
             curl -fsSL get.docker.com -o get-docker.sh
             sh get-docker.sh
+            docker version
       - run:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
