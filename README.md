@@ -10,7 +10,7 @@ The `/example` directory defines a simple stack consisting of
 * Postgres GRPC Connector
 * Postgres Database
 
-Using the reload runner in [example/reload-runner] you can trigger a reload the QIX Engine that 
+Using the reload runner in [example/reload-runner](example/reload-runner) you can trigger a reload the QIX Engine that 
 loads an example table (originally defined in
 [example/postgres-image/airports.csv](example/postgres-image/airports.csv)). 
  
