@@ -5,7 +5,7 @@ services:
     build: postgres-image/
   postgres-grpc-connector:
     container_name: postgres-grpc-connector
-    image: qlikea/postgres-grpc-connector${TAG}
+    build: ../
   qix-engine:
     container_name: qix-engine
     image: qlikea/engine:12.84.0

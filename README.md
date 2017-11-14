@@ -1,7 +1,27 @@
-# GRPC Go Custom connector without QVX
+# Example Postgres GRPC Connector
 
-A POC to validate that it is possible to write a custom connector without the qvx protocol using GRPC.
+The Example Postgres GRPC Connector shows how to load data into QIX Engine from Postgres using a 
+dockerized connector built in Golang.
 
-*Note: Requires Engine version 12.71.0 or newer.*
+# Example
 
-[See the example implementation how connect QIX Engine and a custom postgres connector using the gRPC protocol](/example/README.md).
+The `/example` directory defines a simple stack consisting of
+* QIX Engine
+* Postgres GRPC Connector
+* Postgres Database
+
+Using the reload runner in [example/reload-runner] you can trigger a reload the QIX Engine that 
+loads an example table (originally defined in
+[example/postgres-image/airports.csv](example/postgres-image/airports.csv)). 
+ 
+### Steps to get the example up and running
+
+Run in a \*nix environment (or Git Bash if on Windows):
+
+```bash
+$ cd example
+$ docker-compose up -d --build
+$ cd reload-runner
+$ npm install
+$ npm start
+```
