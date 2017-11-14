@@ -50,7 +50,7 @@ session.open()
 		const script = `
 			lib connect to 'postgresgrpc';	
 			Airports:						
-			sql select rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() from airports;
+			sql SELECT rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() FROM airports ORDER BY Airport;
 		`; // add script to use the grpc-connector and load a table
 		return app.setScript(script);
 	})
@@ -82,6 +82,17 @@ session.open()
 		return app.getTableData(-1, 10, true, "Airports")
 	})
 	.then((tableData) => {
+		if (tableData.length == 0) {
+			return Promise.reject("Empty table response")
+		}
+
+		//Check if the first row contains what is expected. Exclude the last date column since it varies.
+		var firstDataRow = tableData[1].qValue.map(obj => obj.qText).reduce((a, b) => a + ":" + b)
+		var expectedFirstDataRowExcludingDate = "4316:7 Novembre:Tabarka:Tunisia:TBJ:DTKA:36.978333:8.876389:0:1:E:Africa/Tunis";
+		if (firstDataRow.lastIndexOf(expectedFirstDataRowExcludingDate) !== 0) {
+			return Promise.reject("The check on the first row content was unsuccessful")
+		}
+
 		//Convert table grid into a string using some functional magic
 		var tableDataAsString = tableData.map((row) => row.qValue.map((value) => value.qText).reduce((left, right) => left + "\t" + right)).reduce((row1, row2) => row1 + "\n" + row2)
 		console.log(tableDataAsString);

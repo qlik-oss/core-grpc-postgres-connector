@@ -21,7 +21,7 @@ var fieldDescriptions = []pgx.FieldDescription{
 	{DataTypeName: "float4"},
 	{DataTypeName: "float8"},
 	{DataTypeName: "timestamp"},
-	{DataTypeName: "timestampz"},
+	{DataTypeName: "timestamptz"},
 	{DataTypeName: "date"},
 	{DataTypeName: "numeric"},
 	{DataTypeName: "decimal"},
