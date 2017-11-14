@@ -1,1 +1,1 @@
-docker build . -t qlikea/postgres-grpc-connector:dev
+docker build . -t qlikea/postgres-grpc-connector

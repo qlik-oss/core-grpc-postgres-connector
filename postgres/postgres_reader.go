@@ -44,9 +44,10 @@ func (this *PostgresReader) GetData(dataOptions *qlik.GetDataOptions, stream qli
 	fmt.Println(dataOptions.Parameters.Statement);
 	fmt.Println(dataOptions.Connection.ConnectionString);
 	fmt.Println(dataOptions.Connection.User);
-	fmt.Println(dataOptions.Connection.Password);
-	rows, _ := conn.Query(dataOptions.Parameters.Statement)
-
+	rows, err2 := conn.Query(dataOptions.Parameters.Statement)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
 
 	// Start asynchronus translation and writing
 	var asyncStreamwriter = qlik.NewAsyncStreamWriter(stream, &done)
