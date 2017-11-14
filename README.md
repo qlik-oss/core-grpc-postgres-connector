@@ -1,18 +1,25 @@
 # Example Postgres GRPC Connector
 
 The Example Postgres GRPC Connector shows how to load data into QIX Engine from Postgres using a 
-dockerized connector built in Golang.
+dockerized connector built in Golang. It streams the data asynchronously using go channels though 
+the following components before sending it onto QIX Engine.  
+* postgres_reader - reads the data from the database into reasonably sized sql data chunks.
+* async_translator - takes the sql data chunks and translates them into grpc data chunks.
+* async_stream_writer - takes the grpc data chunks and writes them onto the grpc stream.
 
-# Example
+The reason for the division is to be able to utilize multiple CPU cores to process the different stages simultaneously.
 
-The `/example` directory defines a simple stack consisting of
+## Example
+
+The `/example` directory defines a simple stack of services using docker-compose:
 * QIX Engine
 * Postgres GRPC Connector
 * Postgres Database
-
-Using the reload runner in [example/reload-runner](example/reload-runner) you can trigger a reload the QIX Engine that 
-loads an example table (originally defined in
-[example/postgres-image/airports.csv](example/postgres-image/airports.csv)). 
+* Node Test Runner (only used for automated testing)
+ 
+The script in [example/reload-runner](example/reload-runner) is used to instruct QIX Engine to load the example 
+data (originally defined in [example/postgres-image/airports.csv](example/postgres-image/airports.csv)) 
+using the connector.  
  
 ### Steps to get the example up and running
 
