@@ -3,9 +3,9 @@
 The Example Postgres GRPC Connector shows how to load data into QIX Engine from Postgres using a
 dockerized connector built in Golang. It streams the data asynchronously using go channels though
 the following components before sending it onto QIX Engine.
-* postgres_reader - reads the data from the database into reasonably sized sql data chunks.
-* async_translator - takes the sql data chunks and translates them into grpc data chunks.
-* async_stream_writer - takes the grpc data chunks and writes them onto the grpc stream.
+* postgres_reader - reads the data from the database into reasonably sized SQL data chunks.
+* async_translator - takes the SQL data chunks and translates them into GRPC data chunks.
+* async_stream_writer - takes the GRPC data chunks and writes them onto the GRPC stream.
 
 The reason for the division is to be able to utilize multiple CPU cores to process the different stages simultaneously.
 
