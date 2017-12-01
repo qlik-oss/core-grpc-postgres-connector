@@ -6,7 +6,7 @@ const host = process.argv.slice(2)[0] || 'localhost';
 // create a new session:
 const session = enigma.create({
 	schema,
-	url: `ws://${host}:9076/app/engineData`,
+	url: `ws://${host}:19076/app/engineData`,
 	createSocket: url => new WebSocket(url),
 });
 
