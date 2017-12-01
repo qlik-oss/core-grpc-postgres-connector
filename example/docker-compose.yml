@@ -1,17 +1,21 @@
 version: "3.3"
 services:
+
   postgres-database:
     container_name: postgres-database
     build: postgres-image/
+
   postgres-grpc-connector:
     container_name: postgres-grpc-connector
     build: ../
+
   qix-engine:
     container_name: qix-engine
     image: qlikea/engine:12.99.0
     ports:
-      - 9076:9076
+      - 19076:9076
     command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
+
   node-test-runner:
     container_name: node-test-runner
     image: node:8
