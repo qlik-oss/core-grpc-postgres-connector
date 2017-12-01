@@ -2,11 +2,13 @@ const WebSocket = require('ws');
 const schema = require('enigma.js/schemas/12.20.0.json');
 var enigma = require('enigma.js')
 const host = process.argv.slice(2)[0] || 'localhost';
+const port = host == 'localhost' ? 19076 : 9076;
+const url = `ws://${host}:${port}/app/engineData`;
 
 // create a new session:
 const session = enigma.create({
 	schema,
-	url: `ws://${host}:19076/app/engineData`,
+	url,
 	createSocket: url => new WebSocket(url),
 });
 
