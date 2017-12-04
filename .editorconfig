@@ -1,0 +1,22 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.go]
+charset = utf-8
+indent_size = 4
+
+[*.json]
+charset = utf-8
+indent_size = 2
+
+[*.sh]
+charset = utf-8
+indent_size = 2
