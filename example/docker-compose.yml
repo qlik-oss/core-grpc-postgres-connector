@@ -4,25 +4,23 @@ services:
   postgres-database:
     container_name: postgres-database
     build: postgres-image/
-    ports:
-      - 5432:5432
 
-#  postgres-grpc-connector:
-#    container_name: postgres-grpc-connector
-#    build: ../
+  postgres-grpc-connector:
+    container_name: postgres-grpc-connector
+    build: ../
 
   qix-engine:
     container_name: qix-engine
     image: qlikea/engine:12.105.0
     ports:
       - 19076:9076
-    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,10.88.1.110:50051"
+    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
 
   node-test-runner:
     container_name: node-test-runner
     image: node:8
     working_dir: /reload-runner
-    # Not working in circleCI, using cp instead to get test files
+    # Not working in circleCI, using cp instead to get test files 
     volumes:
       - ./reload-runner:/reload-runner
     # Creating node busybox

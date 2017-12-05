@@ -62,7 +62,7 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 		reader, err := postgres.NewPostgresReader(connectionString)
 		this.postgresReaders[connectionString] = reader
 		if err != nil {
-			return status.Error(codes.Unavailable, err.Error())
+			return status.Error(codes.Internal, err.Error())
 		}
 	} else {
 		fmt.Println("Reusing connection pool")
@@ -70,7 +70,7 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 
 	err := this.postgresReaders[connectionString].GetData(dataOptions, stream)
 	if err != nil {
-		err = status.Error(codes.Unavailable, err.Error())
+		err = status.Error(codes.Internal, err.Error())
 	}
 	t1 := makeTimestamp()
 	fmt.Println("Time", t1-t0, "ms")
