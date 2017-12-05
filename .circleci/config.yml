@@ -14,7 +14,7 @@ jobs:
           name: Linting
           command: |
             go get -u github.com/golang/lint/golint
-            golint client/ postgres/ qlik/ server/
+            golint -set_exit_status ./...
       - run:
           name: Build Docker Image
           command: |
@@ -47,7 +47,7 @@ jobs:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
-          name: Spin up environment 
+          name: Spin up environment
           working_directory: ~/postgres-grpc-connector/example
           command: |
             VER=$(cat /tmp/workspace/version.txt)
