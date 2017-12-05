@@ -1,6 +1,5 @@
 package qlik
 
-// AsyncStreamWriter provides an API to asynchronously write data to a stream.
 type AsyncStreamWriter struct {
 	grpcStream Connector_GetDataServer
 	channel    chan *DataChunk

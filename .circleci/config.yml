@@ -11,6 +11,11 @@ jobs:
       - setup_remote_docker:
           version: 17.10.0-ce
       - run:
+          name: Linting
+          command: |
+            go get -u github.com/golang/lint/golint
+            golint client/ postgres/ qlik/ server/
+      - run:
           name: Build Docker Image
           command: |
             mkdir -p workspace
