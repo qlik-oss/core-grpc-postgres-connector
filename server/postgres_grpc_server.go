@@ -1,17 +1,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"os"
 	"runtime/pprof"
-	"flag"
 	"time"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/status"
+
 	"github.com/qlik-ea/postgres-grpc-connector/postgres"
+	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
@@ -56,20 +57,21 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 	}
 
 	if this.postgresReaders[connectionString] == nil {
-		fmt.Println("Starting connection pool");
-		fmt.Println(connectionString);
+		fmt.Println("Starting connection pool")
+		fmt.Println(connectionString)
 		reader, err := postgres.NewPostgresReader(connectionString)
 		this.postgresReaders[connectionString] = reader
 		if err != nil {
-			err1 := status.Error(codes.Unavailable, "FOOO BAAAR")
-			fmt.Println(err1)
-			return err1
+			return status.Error(codes.Unavailable, err.Error())
 		}
 	} else {
 		fmt.Println("Reusing connection pool")
 	}
 
 	err := this.postgresReaders[connectionString].GetData(dataOptions, stream)
+	if err != nil {
+		err = status.Error(codes.Unavailable, err.Error())
+	}
 	t1 := makeTimestamp()
 	fmt.Println("Time", t1-t0, "ms")
 
