@@ -52,16 +52,12 @@ func main() {
 
 	var totalCount int
 	for receiveError == nil {
-		if bundle.Cols != nil {
-			var stringsLen = len(bundle.Cols[0].Strings)
-			var numbersLen = len(bundle.Cols[0].Doubles)
-			if stringsLen > 0 {
-				totalCount += stringsLen
-			} else {
-				totalCount += numbersLen
-			}
+		var stringsLen = len(bundle.Cols[0].Strings)
+		var numbersLen = len(bundle.Cols[0].Doubles)
+		if stringsLen > 0 {
+			totalCount += stringsLen
 		} else {
-			totalCount += len(bundle.Cols)
+			totalCount += numbersLen
 		}
 
 		bundle, receiveError = stream.Recv()

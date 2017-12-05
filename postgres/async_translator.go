@@ -1,21 +1,23 @@
 package postgres
 
 import (
-	"github.com/jackc/pgx"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
-	"time"
-	"github.com/jackc/pgx/pgtype"
 	"fmt"
 	"reflect"
+	"time"
+
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
+	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 )
 
-func (this *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
+// GetTypes returns a list of fields and their types.
+func (a *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
 
-	var array = make([]*qlik.FieldInfo, len(this.fieldDescriptors))
+	var array = make([]*qlik.FieldInfo, len(a.fieldDescriptors))
 
-	for i, fieldDescr := range this.fieldDescriptors {
-		var semanticType = qlik.SemanticType_DEFAULT;
-		var fieldAttrType = qlik.FieldAttrType_TEXT;
+	for i, fieldDescr := range a.fieldDescriptors {
+		var semanticType = qlik.SemanticType_DEFAULT
+		var fieldAttrType = qlik.FieldAttrType_TEXT
 		switch fieldDescr.DataTypeName {
 		case "varchart", "text":
 			fieldAttrType = qlik.FieldAttrType_TEXT
@@ -37,36 +39,38 @@ func (this *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
 		default:
 			fieldAttrType = qlik.FieldAttrType_TEXT
 		}
-		array[i] = &qlik.FieldInfo{this.fieldDescriptors[i].Name, semanticType, &qlik.FieldAttributes{Type: fieldAttrType}}
-
+		array[i] = &qlik.FieldInfo{
+			Name:            a.fieldDescriptors[i].Name,
+			SemanticType:    semanticType,
+			FieldAttributes: &qlik.FieldAttributes{Type: fieldAttrType},
+		}
 	}
 	return array
 }
 
-/**
- *	Class AsyncStreamWriter
- */
-
+// AsyncTranslator defines the translator interface.
 type AsyncTranslator struct {
 	writer           *qlik.AsyncStreamWriter
 	fieldDescriptors []pgx.FieldDescription
-	channel chan [][]interface{}
+	channel          chan [][]interface{}
 }
 
+// NewAsyncTranslator constructs a new translator.
 func NewAsyncTranslator(writer *qlik.AsyncStreamWriter, fieldDescriptors []pgx.FieldDescription) *AsyncTranslator {
 	var this = &AsyncTranslator{writer, fieldDescriptors, make(chan [][]interface{}, 10)}
 	go this.run()
 	return this
 }
 
-func (this *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
-	var array = this.GetTypes();
-	return &qlik.GetDataResponse{array, ""}
+// GetDataResponseMetadata returns the metadata for a specific dataset.
+func (a *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
+	var array = a.GetTypes()
+	return &qlik.GetDataResponse{FieldInfo: array, TableName: ""}
 }
 
-func (this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.DataChunk {
-	var types = this.GetTypes();
-	var columnCount, rowCount = len(this.fieldDescriptors), int64(len(tempQixRowList))
+func (a *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.DataChunk {
+	var types = a.GetTypes()
+	var columnCount, rowCount = len(a.fieldDescriptors), int64(len(tempQixRowList))
 	var rowBundle = qlik.DataChunk{Cols: make([]*qlik.Column, columnCount)}
 
 	if len(tempQixRowList) > 0 {
@@ -121,7 +125,7 @@ func (this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qli
 							value.AssignTo(&column.Doubles[r])
 						default:
 							fmt.Println(srcValue)
-							fmt.Println("Unknown format", srcValue);
+							fmt.Println("Unknown format", srcValue)
 						}
 					}
 				case qlik.FieldAttrType_INTEGER:
@@ -157,18 +161,19 @@ func (this *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qli
 	return &rowBundle
 }
 
-func (this *AsyncTranslator) Write(values [][]interface{}) {
-	this.channel <- values
+func (a *AsyncTranslator) Write(values [][]interface{}) {
+	a.channel <- values
 }
 
-func (this *AsyncTranslator) Close() {
-	close(this.channel)
+// Close will close the underlying channel.
+func (a *AsyncTranslator) Close() {
+	close(a.channel)
 }
 
-func (this *AsyncTranslator) run() {
-	for tempQixRowList := range this.channel {
-		var resultChunk = this.buildRowBundle(tempQixRowList)
-		this.writer.Write(resultChunk)
+func (a *AsyncTranslator) run() {
+	for tempQixRowList := range a.channel {
+		var resultChunk = a.buildRowBundle(tempQixRowList)
+		a.writer.Write(resultChunk)
 	}
-	this.writer.Close()
+	a.writer.Close()
 }

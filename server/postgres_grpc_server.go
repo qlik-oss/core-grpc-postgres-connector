@@ -24,7 +24,7 @@ const (
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
 
 type server struct {
-	postgresReaders map[string]*postgres.PostgresReader
+	postgresReaders map[string]*postgres.Reader
 }
 
 func makeTimestamp() int64 {
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	var srv = &server{make(map[string]*postgres.PostgresReader)}
+	var srv = &server{make(map[string]*postgres.Reader)}
 	qlik.RegisterConnectorServer(s, srv)
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
