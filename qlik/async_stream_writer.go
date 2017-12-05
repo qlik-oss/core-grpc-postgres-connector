@@ -1,5 +1,6 @@
 package qlik
 
+// AsyncStreamWriter defines the writer interface.
 type AsyncStreamWriter struct {
 	grpcStream Connector_GetDataServer
 	channel    chan *DataChunk
