@@ -11,6 +11,11 @@ jobs:
       - setup_remote_docker:
           version: 17.10.0-ce
       - run:
+          name: Linting
+          command: |
+            go get -u github.com/golang/lint/golint
+            golint -set_exit_status ./...
+      - run:
           name: Build Docker Image
           command: |
             mkdir -p workspace
@@ -42,7 +47,7 @@ jobs:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
-          name: Spin up environment 
+          name: Spin up environment
           working_directory: ~/postgres-grpc-connector/example
           command: |
             VER=$(cat /tmp/workspace/version.txt)

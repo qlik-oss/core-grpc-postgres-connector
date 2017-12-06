@@ -1,31 +1,32 @@
 package qlik
 
-/**
- *	Class AsyncStreamWriter
- */
+// AsyncStreamWriter defines the writer interface.
 type AsyncStreamWriter struct {
 	grpcStream Connector_GetDataServer
-	channel chan *DataChunk
-	done *chan bool
+	channel    chan *DataChunk
+	done       chan bool
 }
 
-func NewAsyncStreamWriter(grpcStream Connector_GetDataServer, done *chan bool) *AsyncStreamWriter {
+// NewAsyncStreamWriter constructs a new async stream writer.
+func NewAsyncStreamWriter(grpcStream Connector_GetDataServer, done chan bool) *AsyncStreamWriter {
 	var this = &AsyncStreamWriter{grpcStream, make(chan *DataChunk, 10), done}
-	go this.run();
+	go this.run()
 	return this
 }
-func (this *AsyncStreamWriter) Write(rowBundle *DataChunk) {
-	this.channel <- rowBundle
+
+// Write will send a datachunk on the underlying stream.
+func (a *AsyncStreamWriter) Write(rowBundle *DataChunk) {
+	a.channel <- rowBundle
 }
 
-func (this *AsyncStreamWriter) Close() {
-	close(this.channel)
+// Close will close the underlying stream.
+func (a *AsyncStreamWriter) Close() {
+	close(a.channel)
 }
 
-func (this *AsyncStreamWriter) run() {
-	for resultChunk := range this.channel {
-		this.grpcStream.Send(resultChunk);
+func (a *AsyncStreamWriter) run() {
+	for resultChunk := range a.channel {
+		a.grpcStream.Send(resultChunk)
 	}
-	*this.done <- true;
+	a.done <- true
 }
-
