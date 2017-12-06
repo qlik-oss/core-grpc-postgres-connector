@@ -18,19 +18,19 @@ import (
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
 
 type server struct {
-	postgresReaders map[string]*postgres.PostgresReader
+	postgresReaders map[string]*postgres.Reader
 }
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func (this *server) ExecuteGenericCommand(
-	context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
+func (s *server) ExecuteGenericCommand(context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
 	return &qlik.GenericCommandResponse{Data: "{}"}, nil
 }
 
-func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
+func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
+
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -56,11 +56,11 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 		connectionString = connectionString + ";password=" + dataOptions.Connection.Password
 	}
 
-	if this.postgresReaders[connectionString] == nil {
+	if s.postgresReaders[connectionString] == nil {
 		fmt.Println("Starting connection pool")
 		fmt.Println(connectionString)
 		reader, err := postgres.NewPostgresReader(connectionString)
-		this.postgresReaders[connectionString] = reader
+		s.postgresReaders[connectionString] = reader
 		if err != nil {
 			return status.Error(codes.Internal, err.Error())
 		}
@@ -68,7 +68,7 @@ func (this *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connec
 		fmt.Println("Reusing connection pool")
 	}
 
-	err := this.postgresReaders[connectionString].GetData(dataOptions, stream)
+	err := s.postgresReaders[connectionString].GetData(dataOptions, stream)
 	if err != nil {
 		err = status.Error(codes.Internal, err.Error())
 	}

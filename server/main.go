@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+
 	"github.com/qlik-ea/postgres-grpc-connector/postgres"
 	"github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	srv := &server{make(map[string]*postgres.PostgresReader)}
+	srv := &server{make(map[string]*postgres.Reader)}
 	qlik.RegisterConnectorServer(s, srv)
 
 	// Register reflection service on gRPC server.
@@ -33,4 +34,3 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
-
