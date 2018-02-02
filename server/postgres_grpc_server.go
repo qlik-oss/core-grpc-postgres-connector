@@ -10,7 +10,6 @@ import (
 
 	"github.com/qlik-ea/postgres-grpc-connector/postgres"
 	"github.com/qlik-ea/postgres-grpc-connector/qlik"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -23,10 +22,6 @@ type server struct {
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
-func (s *server) ExecuteGenericCommand(context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
-	return &qlik.GenericCommandResponse{Data: "{}"}, nil
 }
 
 func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {

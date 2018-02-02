@@ -68,97 +68,112 @@ func (a *AsyncTranslator) GetDataResponseMetadata() *qlik.GetDataResponse {
 	return &qlik.GetDataResponse{FieldInfo: array, TableName: ""}
 }
 
-func (a *AsyncTranslator) buildRowBundle(tempQixRowList [][]interface{}) *qlik.DataChunk {
+func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.DataChunk {
 	var types = a.GetTypes()
-	var columnCount, rowCount = len(a.fieldDescriptors), int64(len(tempQixRowList))
-	var rowBundle = qlik.DataChunk{Cols: make([]*qlik.Column, columnCount)}
+	var columnCount = len(a.fieldDescriptors)
+	var maxSize = len(tempQixRowList) * len(a.fieldDescriptors)
+	var dataChunk = qlik.DataChunk{StringValues: make([]string, 0, maxSize),
+		DoubleValues: make([]float64, 0, maxSize),
+		StringIndex: make([]int32, 0, 2 * maxSize),
+		NumberIndex: make([]int64, 0, maxSize)}
 
 	if len(tempQixRowList) > 0 {
-		for c := 0; c < columnCount; c++ {
-			var column = &qlik.Column{}
-			if types[c].SemanticType == qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC {
-				column.Integers = make([]int64, rowCount)
-				for r := 0; r < len(tempQixRowList); r++ {
+		for r := 0; r < len(tempQixRowList); r++ {
+			for c := 0; c < columnCount; c++ {
+				if types[c].SemanticType == qlik.SemanticType_UNIX_SECONDS_SINCE_1970_UTC {
 					var srcValue = tempQixRowList[r][c]
 					switch tempQixRowList[r][c].(type) {
 					case time.Time:
-						column.Integers[r] = srcValue.(time.Time).Unix()
+						dataChunk.DoubleValues = append(dataChunk.DoubleValues, float64(srcValue.(time.Time).Unix()))
+						dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+						dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(len(dataChunk.DoubleValues)-1))
 					default:
 						fmt.Println(srcValue)
 					}
-				}
-			} else {
-				switch types[c].FieldAttributes.Type {
-				case qlik.FieldAttrType_TEXT:
-					column.Flags = make([]qlik.ValueFlag, rowCount)
-					column.Strings = make([]string, rowCount)
-					for r := 0; r < len(tempQixRowList); r++ {
+				} else {
+					switch types[c].FieldAttributes.Type {
+					case qlik.FieldAttrType_TEXT:
 						var srcValue = tempQixRowList[r][c]
 						if srcValue != nil {
-							switch tempQixRowList[0][c].(type) {
+							switch tempQixRowList[r][c].(type) {
 							case string:
-								column.Strings[r] = srcValue.(string)
-								column.Flags[r] = qlik.ValueFlag_Normal
+								dataChunk.StringValues = append(dataChunk.StringValues, srcValue.(string))
+								dataChunk.StringIndex = append(dataChunk.StringIndex, int32(len(dataChunk.StringValues)-1))
+								dataChunk.NumberIndex = append(dataChunk.NumberIndex, -1)
 							default:
-								column.Strings[r] = "<Unsupported format>"
-								column.Flags[r] = qlik.ValueFlag_Normal
+								fmt.Println("Unknown format", srcValue)
 							}
 						} else {
-							column.Strings[r] = ""
-							column.Flags[r] = qlik.ValueFlag_Null
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -1)
 						}
-					}
-				case qlik.FieldAttrType_REAL:
-					column.Doubles = make([]float64, rowCount)
-					for r := 0; r < len(tempQixRowList); r++ {
+					case qlik.FieldAttrType_REAL:
 						var srcValue = tempQixRowList[r][c]
+						var index = int64(len(dataChunk.DoubleValues))
 						switch tempQixRowList[r][c].(type) {
 						case float64:
-							column.Doubles[r] = float64(srcValue.(float64))
+							dataChunk.DoubleValues = append(dataChunk.DoubleValues, srcValue.(float64))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, index)
 						case float32:
-							column.Doubles[r] = float64(srcValue.(float32))
+							dataChunk.DoubleValues = append(dataChunk.DoubleValues, float64(srcValue.(float32)))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, index)
 						case pgtype.Numeric:
 							var value = srcValue.(pgtype.Numeric)
-							value.AssignTo(&column.Doubles[r])
+							dataChunk.DoubleValues = append(dataChunk.DoubleValues, 0)
+							value.AssignTo(dataChunk.DoubleValues[len(dataChunk.DoubleValues)-1])
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, index)
 						case pgtype.Decimal:
 							var value = srcValue.(pgtype.Decimal)
-							value.AssignTo(&column.Doubles[r])
+							dataChunk.DoubleValues = append(dataChunk.DoubleValues, 0)
+							value.AssignTo(dataChunk.DoubleValues[len(dataChunk.DoubleValues)-1])
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, index)
 						default:
-							fmt.Println(srcValue)
 							fmt.Println("Unknown format", srcValue)
 						}
-					}
-				case qlik.FieldAttrType_INTEGER:
-					column.Integers = make([]int64, rowCount)
-					for r := 0; r < len(tempQixRowList); r++ {
+					case qlik.FieldAttrType_INTEGER:
 						var srcValue = tempQixRowList[r][c]
 						switch tempQixRowList[r][c].(type) {
 						case int:
-							column.Integers[r] = int64(srcValue.(int))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(srcValue.(int)))
 						case int64:
-							column.Integers[r] = srcValue.(int64)
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(srcValue.(int64)))
 						case int32:
-							column.Integers[r] = int64(srcValue.(int32))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(srcValue.(int32)))
 						case int16:
-							column.Integers[r] = int64(srcValue.(int16))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(srcValue.(int16)))
 						case int8:
-							column.Integers[r] = int64(srcValue.(int8))
+							dataChunk.StringIndex = append(dataChunk.StringIndex, -1)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -2)
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, int64(srcValue.(int8)))
 						case bool:
 							if srcValue.(bool) {
-								column.Integers[r] = -1
+								dataChunk.StringValues = append(dataChunk.StringValues, "true")
 							} else {
-								column.Integers[r] = 0
+								dataChunk.StringValues = append(dataChunk.StringValues, "false")
 							}
+							dataChunk.StringIndex = append(dataChunk.StringIndex, int32(len(dataChunk.StringValues)-1))
+							dataChunk.NumberIndex = append(dataChunk.NumberIndex, -1)
 						default:
 							fmt.Println(reflect.TypeOf(srcValue))
 						}
 					}
 				}
 			}
-			rowBundle.Cols[c] = column
 		}
 	}
-	return &rowBundle
+	return &dataChunk
 }
 
 func (a *AsyncTranslator) Write(values [][]interface{}) {
@@ -172,7 +187,7 @@ func (a *AsyncTranslator) Close() {
 
 func (a *AsyncTranslator) run() {
 	for tempQixRowList := range a.channel {
-		var resultChunk = a.buildRowBundle(tempQixRowList)
+		var resultChunk = a.buildDataChunk(tempQixRowList)
 		a.writer.Write(resultChunk)
 	}
 	a.writer.Close()

@@ -26,6 +26,7 @@ var fieldDescriptions = []pgx.FieldDescription{
 	{DataTypeName: "numeric"},
 	{DataTypeName: "decimal"},
 	{DataTypeName: "bool"},
+	{DataTypeName: "text"},
 }
 
 var time1, _ = time.Parse(time.RFC3339, "20150717T00:00:00+00:00")
@@ -47,6 +48,7 @@ var postgresRowData = [][]interface{}{
 		pgtype.Numeric{},
 		pgtype.Decimal{},
 		true,
+		nil,
 	},
 }
 
@@ -78,48 +80,36 @@ var _ = Describe("AsyncTranslator", func() {
 			Expect(typeConstants[12].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
 			Expect(typeConstants[13].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_REAL))
 			Expect(typeConstants[14].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_INTEGER))
+			Expect(typeConstants[15].FieldAttributes.Type).To(Equal(qlik.FieldAttrType_TEXT))
 		})
 	})
 
 	Context("Translate a row bundle", func() {
 		var asyncTranslator = AsyncTranslator{fieldDescriptors: fieldDescriptions}
-		var bundle = asyncTranslator.buildRowBundle(postgresRowData)
+		var bundle = asyncTranslator.buildDataChunk(postgresRowData)
+		var expectedOutCome = qlik.DataChunk{
+			StringValues: []string {"varchar", "text", "true"},
+			DoubleValues: []float64 {2.4, 4.8, float64(time1.Unix()), float64(time1.Unix()), float64(time1.Unix()), 0, 0},
+			StringIndex: []int32 {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, -2},
+			NumberIndex: []int64 {-1, -1, -2, 8, -2, 4, -2, 2, -2, 1, -2, 9, 0, 1, 2, 3, 4, 5, 6, -1, -1}}
 
-
-		var expectedBundle = qlik.DataChunk{Cols: []*qlik.Column {
-			{Strings: []string {"varchar"}, Flags:[]qlik.ValueFlag{qlik.ValueFlag_Normal}},
-			{Strings: []string {"text"}, Flags:[]qlik.ValueFlag{qlik.ValueFlag_Normal}},
-			{Integers: []int64 {8}},
-			{Integers: []int64 {4}},
-			{Integers: []int64 {2}},
-			{Integers: []int64 {1}},
-			{Integers: []int64 {9}},
-			{Doubles: []float64 {2.4}},
-			{Doubles: []float64 {4.8}},
-			{Integers: []int64 {int64(time1.Unix())}},
-			{Integers: []int64 {int64(time1.Unix())}},
-			{Integers: []int64 {int64(time1.Unix())}},
-			{Doubles: []float64 {0}},
-			{Doubles: []float64 {0}},
-			{Integers: []int64 {-1}},
-		}}
-
-		It("should match the expected type constants", func() {
-			Expect(bundle.Cols[0]).To(BeEquivalentTo(expectedBundle.Cols[0]))
-			Expect(bundle.Cols[1]).To(BeEquivalentTo(expectedBundle.Cols[1]))
-			Expect(bundle.Cols[2]).To(BeEquivalentTo(expectedBundle.Cols[2]))
-			Expect(bundle.Cols[3]).To(BeEquivalentTo(expectedBundle.Cols[3]))
-			Expect(bundle.Cols[4]).To(BeEquivalentTo(expectedBundle.Cols[4]))
-			Expect(bundle.Cols[5]).To(BeEquivalentTo(expectedBundle.Cols[5]))
-			Expect(bundle.Cols[6]).To(BeEquivalentTo(expectedBundle.Cols[6]))
-			Expect(bundle.Cols[7]).To(BeEquivalentTo(expectedBundle.Cols[7]))
-			Expect(bundle.Cols[8]).To(BeEquivalentTo(expectedBundle.Cols[8]))
-			Expect(bundle.Cols[9]).To(BeEquivalentTo(expectedBundle.Cols[9]))
-			Expect(bundle.Cols[10]).To(BeEquivalentTo(expectedBundle.Cols[10]))
-			Expect(bundle.Cols[11]).To(BeEquivalentTo(expectedBundle.Cols[11]))
-			Expect(bundle.Cols[12]).To(BeEquivalentTo(expectedBundle.Cols[12]))
-			Expect(bundle.Cols[13]).To(BeEquivalentTo(expectedBundle.Cols[13]))
-			Expect(bundle.Cols[14]).To(BeEquivalentTo(expectedBundle.Cols[14]))
+		It("should match the expected type contants", func() {
+			Expect(len(bundle.StringValues)).To(BeIdenticalTo(3))
+			for i := 0; i < len(bundle.StringValues); i++ {
+				Expect(bundle.StringValues[i]).To(BeEquivalentTo(expectedOutCome.StringValues[i]))
+			}
+			Expect(len(bundle.DoubleValues)).To(BeIdenticalTo(7))
+			for i := 0; i < len(bundle.DoubleValues); i++ {
+				Expect(bundle.DoubleValues[i]).To(BeEquivalentTo(expectedOutCome.DoubleValues[i]))
+			}
+			Expect(len(bundle.StringIndex)).To(BeIdenticalTo(16))
+			for i := 0; i < len(bundle.StringIndex); i++ {
+				Expect(bundle.StringIndex[i]).To(BeEquivalentTo(expectedOutCome.StringIndex[i]))
+			}
+			Expect(len(bundle.NumberIndex)).To(BeIdenticalTo(21))
+			for i := 0; i < len(bundle.NumberIndex); i++ {
+				Expect(bundle.NumberIndex[i]).To(BeEquivalentTo(expectedOutCome.NumberIndex[i]))
+			}
 		})
 	})
 
