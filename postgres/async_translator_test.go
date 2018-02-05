@@ -88,27 +88,27 @@ var _ = Describe("AsyncTranslator", func() {
 		var asyncTranslator = AsyncTranslator{fieldDescriptors: fieldDescriptions}
 		var bundle = asyncTranslator.buildDataChunk(postgresRowData)
 		var expectedOutCome = qlik.DataChunk{
-			StringValues: []string {"varchar", "text", "true"},
-			DoubleValues: []float64 {2.4, 4.8, float64(time1.Unix()), float64(time1.Unix()), float64(time1.Unix()), 0, 0},
-			StringIndex: []int32 {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, -2},
-			NumberIndex: []int64 {-1, -1, -2, 8, -2, 4, -2, 2, -2, 1, -2, 9, 0, 1, 2, 3, 4, 5, 6, -1, -1}}
+			StringBucket: []string {"varchar", "text", "true"},
+			DoubleBucket: []float64 {2.4, 4.8, float64(time1.Unix()), float64(time1.Unix()), float64(time1.Unix()), 0, 0},
+			StringCodes: []int32 {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, -2},
+			NumberCodes: []int64 {-1, -1, -2, 8, -2, 4, -2, 2, -2, 1, -2, 9, 0, 1, 2, 3, 4, 5, 6, -1, -1}}
 
 		It("should match the expected type contants", func() {
-			Expect(len(bundle.StringValues)).To(BeIdenticalTo(3))
-			for i := 0; i < len(bundle.StringValues); i++ {
-				Expect(bundle.StringValues[i]).To(BeEquivalentTo(expectedOutCome.StringValues[i]))
+			Expect(len(bundle.StringBucket)).To(BeIdenticalTo(3))
+			for i := 0; i < len(bundle.StringBucket); i++ {
+				Expect(bundle.StringBucket[i]).To(BeEquivalentTo(expectedOutCome.StringBucket[i]))
 			}
-			Expect(len(bundle.DoubleValues)).To(BeIdenticalTo(7))
-			for i := 0; i < len(bundle.DoubleValues); i++ {
-				Expect(bundle.DoubleValues[i]).To(BeEquivalentTo(expectedOutCome.DoubleValues[i]))
+			Expect(len(bundle.DoubleBucket)).To(BeIdenticalTo(7))
+			for i := 0; i < len(bundle.DoubleBucket); i++ {
+				Expect(bundle.DoubleBucket[i]).To(BeEquivalentTo(expectedOutCome.DoubleBucket[i]))
 			}
-			Expect(len(bundle.StringIndex)).To(BeIdenticalTo(16))
-			for i := 0; i < len(bundle.StringIndex); i++ {
-				Expect(bundle.StringIndex[i]).To(BeEquivalentTo(expectedOutCome.StringIndex[i]))
+			Expect(len(bundle.StringCodes)).To(BeIdenticalTo(16))
+			for i := 0; i < len(bundle.StringCodes); i++ {
+				Expect(bundle.StringCodes[i]).To(BeEquivalentTo(expectedOutCome.StringCodes[i]))
 			}
-			Expect(len(bundle.NumberIndex)).To(BeIdenticalTo(21))
-			for i := 0; i < len(bundle.NumberIndex); i++ {
-				Expect(bundle.NumberIndex[i]).To(BeEquivalentTo(expectedOutCome.NumberIndex[i]))
+			Expect(len(bundle.NumberCodes)).To(BeIdenticalTo(21))
+			for i := 0; i < len(bundle.NumberCodes); i++ {
+				Expect(bundle.NumberCodes[i]).To(BeEquivalentTo(expectedOutCome.NumberCodes[i]))
 			}
 		})
 	})
