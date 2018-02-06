@@ -9,7 +9,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/jackc/pgx"
 	"github.com/qlik-ea/postgres-grpc-connector/qlik"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -26,11 +25,6 @@ func NewPostgresReader(connectString string) (*Reader, error) {
 		return nil, err
 	}
 	return &Reader{pool}, nil
-}
-
-// ExecuteGenericCommand can be invoked to run a command on the QIX Engine side.
-func (r *Reader) ExecuteGenericCommand(context context.Context, genericCommand *qlik.GenericCommand) (*qlik.GenericCommandResponse, error) {
-	return &qlik.GenericCommandResponse{Data: "{}"}, nil
 }
 
 // GetData will return data from the postgres database.
