@@ -74,8 +74,8 @@ func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.D
 	var maxSize = len(tempQixRowList) * len(a.fieldDescriptors)
 	var dataChunk = qlik.DataChunk{StringBucket: make([]string, 0, maxSize),
 		DoubleBucket: make([]float64, 0, maxSize),
-		StringCodes:  make([]int32, 0, 2*maxSize),
-		NumberCodes:  make([]int64, 0, maxSize)}
+		StringCodes:  make([]int32, 0, maxSize),
+		NumberCodes:  make([]int64, 0, 2*maxSize)}
 
 	if len(tempQixRowList) > 0 {
 		for r := 0; r < len(tempQixRowList); r++ {
@@ -88,7 +88,8 @@ func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.D
 						dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
 						dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(len(dataChunk.DoubleBucket)-1))
 					default:
-						fmt.Println(srcValue)
+						dataChunk = addNull(dataChunk)
+						fmt.Println("Unknown format", reflect.TypeOf(srcValue))
 					}
 				} else {
 					switch types[c].FieldAttributes.Type {
@@ -97,76 +98,57 @@ func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.D
 						if srcValue != nil {
 							switch tempQixRowList[r][c].(type) {
 							case string:
-								dataChunk.StringBucket = append(dataChunk.StringBucket, srcValue.(string))
-								dataChunk.StringCodes = append(dataChunk.StringCodes, int32(len(dataChunk.StringBucket)-1))
-								dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
+								dataChunk = addString(dataChunk, srcValue.(string))
 							default:
-								fmt.Println("Unknown format", srcValue)
+								dataChunk = addNull(dataChunk)
+								fmt.Println("Unknown format", reflect.TypeOf(srcValue))
 							}
 						} else {
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
+							dataChunk = addString(dataChunk, "")
 						}
 					case qlik.FieldAttrType_REAL:
 						var srcValue = tempQixRowList[r][c]
-						var index = int64(len(dataChunk.DoubleBucket))
 						switch tempQixRowList[r][c].(type) {
 						case float64:
-							dataChunk.DoubleBucket = append(dataChunk.DoubleBucket, srcValue.(float64))
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, index)
+							dataChunk = addNumber(dataChunk, srcValue.(float64))
 						case float32:
-							dataChunk.DoubleBucket = append(dataChunk.DoubleBucket, float64(srcValue.(float32)))
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, index)
+							dataChunk = addNumber(dataChunk, float64(srcValue.(float32)))
 						case pgtype.Numeric:
 							var value = srcValue.(pgtype.Numeric)
-							dataChunk.DoubleBucket = append(dataChunk.DoubleBucket, 0)
-							value.AssignTo(dataChunk.DoubleBucket[len(dataChunk.DoubleBucket)-1])
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, index)
+							var tempValue float64
+							value.AssignTo(&tempValue)
+							dataChunk = addNumber(dataChunk, tempValue)
 						case pgtype.Decimal:
 							var value = srcValue.(pgtype.Decimal)
-							dataChunk.DoubleBucket = append(dataChunk.DoubleBucket, 0)
-							value.AssignTo(dataChunk.DoubleBucket[len(dataChunk.DoubleBucket)-1])
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, index)
+							var tempValue float64
+							value.AssignTo(&tempValue)
+							dataChunk = addNumber(dataChunk, tempValue)
 						default:
-							fmt.Println("Unknown format", srcValue)
+							dataChunk = addNull(dataChunk)
+							fmt.Println("Unknown format", reflect.TypeOf(srcValue))
 						}
 					case qlik.FieldAttrType_INTEGER:
 						var srcValue = tempQixRowList[r][c]
 						switch tempQixRowList[r][c].(type) {
 						case int:
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(srcValue.(int)))
+							dataChunk = addInteger(dataChunk, int64(srcValue.(int)))
 						case int64:
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(srcValue.(int64)))
+							dataChunk = addInteger(dataChunk, int64(srcValue.(int64)))
 						case int32:
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(srcValue.(int32)))
+							dataChunk = addInteger(dataChunk, int64(srcValue.(int32)))
 						case int16:
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(srcValue.(int16)))
+							dataChunk = addInteger(dataChunk, int64(srcValue.(int16)))
 						case int8:
-							dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(srcValue.(int8)))
+							dataChunk = addInteger(dataChunk, int64(srcValue.(int8)))
 						case bool:
 							if srcValue.(bool) {
-								dataChunk.StringBucket = append(dataChunk.StringBucket, "true")
+								dataChunk = addInteger(dataChunk, 1)
 							} else {
-								dataChunk.StringBucket = append(dataChunk.StringBucket, "false")
+								dataChunk = addInteger(dataChunk, 0)
 							}
-							dataChunk.StringCodes = append(dataChunk.StringCodes, int32(len(dataChunk.StringBucket)-1))
-							dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
 						default:
-							fmt.Println(reflect.TypeOf(srcValue))
+							dataChunk = addNull(dataChunk)
+							fmt.Println("Unknown format", reflect.TypeOf(srcValue))
 						}
 					}
 				}
@@ -174,6 +156,38 @@ func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.D
 		}
 	}
 	return &dataChunk
+}
+
+func addString(dataChunk qlik.DataChunk, stringValue string) qlik.DataChunk {
+	if stringValue != "" {
+		dataChunk.StringBucket = append(dataChunk.StringBucket, stringValue)
+		dataChunk.StringCodes = append(dataChunk.StringCodes, int32(len(dataChunk.StringBucket)-1))
+		dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
+	} else {
+		dataChunk.StringCodes = append(dataChunk.StringCodes, -2)
+		dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
+	}
+	return dataChunk
+}
+
+func addNumber(dataChunk qlik.DataChunk, numberValue float64) qlik.DataChunk {
+	dataChunk.DoubleBucket = append(dataChunk.DoubleBucket, numberValue)
+	dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
+	dataChunk.NumberCodes = append(dataChunk.NumberCodes, int64(len(dataChunk.DoubleBucket)-1))
+	return dataChunk
+}
+
+func addInteger(dataChunk qlik.DataChunk, intValue int64) qlik.DataChunk {
+	dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
+	dataChunk.NumberCodes = append(dataChunk.NumberCodes, -2)
+	dataChunk.NumberCodes = append(dataChunk.NumberCodes, intValue)
+	return dataChunk
+}
+
+func addNull(dataChunk qlik.DataChunk) qlik.DataChunk {
+	dataChunk.StringCodes = append(dataChunk.StringCodes, -1)
+	dataChunk.NumberCodes = append(dataChunk.NumberCodes, -1)
+	return dataChunk
 }
 
 func (a *AsyncTranslator) Write(values [][]interface{}) {
