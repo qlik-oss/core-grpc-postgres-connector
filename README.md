@@ -23,11 +23,13 @@ using the connector.
 
 ### Steps to run the example
 
-Run in a \*nix environment (or Git Bash if on Windows):
+Run in a \*nix environment (or Git Bash if on Windows), note that you must accept the
+[Qlik Core EULA](https://ca.qliktive.com/docs/master/beta/) by setting the `ACCEPT_EULA`
+environment variable:
 
 ```bash
 $ cd example
-$ docker-compose up -d --build
+$ ACCEPT_EULA=yes docker-compose up -d --build
 $ cd reload-runner
 $ npm install
 $ npm start
