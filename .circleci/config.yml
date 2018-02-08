@@ -51,7 +51,7 @@ jobs:
           working_directory: ~/postgres-grpc-connector/example
           command: |
             VER=$(cat /tmp/workspace/version.txt)
-            TAG=:${VER} docker-compose up -d
+            ACCEPT_EULA=yes TAG=:${VER} docker-compose up -d
             docker ps
             docker image ls
       - run:

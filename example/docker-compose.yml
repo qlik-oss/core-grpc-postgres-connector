@@ -14,7 +14,7 @@ services:
     image: qlikea/engine:12.132.0
     ports:
       - 19076:9076
-    command: -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
+    command: -S AcceptEULA=${ACCEPT_EULA} -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="postgres-grpc-connector,postgres-grpc-connector:50051"
 
   node-test-runner:
     container_name: node-test-runner
