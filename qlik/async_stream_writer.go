@@ -1,4 +1,4 @@
-package qlik
+package qlik_connect
 
 // AsyncStreamWriter defines the writer interface.
 type AsyncStreamWriter struct {

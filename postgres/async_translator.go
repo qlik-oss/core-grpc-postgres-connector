@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 )
 
 // GetTypes returns a list of fields and their types.
