@@ -48,7 +48,7 @@ func (r *Reader) GetData(dataRequest *qlik.DataRequest, stream qlik.Connector_Ge
 	}
 
 	// Start asynchronus translation and writing
-	var asyncStreamwriter = qlik.NewAsyncStreamWriter(stream, done)
+	var asyncStreamwriter = NewAsyncStreamWriter(stream, done)
 	var asyncTranslator = NewAsyncTranslator(asyncStreamwriter, rows.FieldDescriptions())
 
 	// Set header with postgresRowData format

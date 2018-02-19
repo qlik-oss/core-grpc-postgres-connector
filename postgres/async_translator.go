@@ -50,13 +50,13 @@ func (a *AsyncTranslator) GetTypes() []*qlik.FieldInfo {
 
 // AsyncTranslator defines the translator interface.
 type AsyncTranslator struct {
-	writer           *qlik.AsyncStreamWriter
+	writer           *AsyncStreamWriter
 	fieldDescriptors []pgx.FieldDescription
 	channel          chan [][]interface{}
 }
 
 // NewAsyncTranslator constructs a new translator.
-func NewAsyncTranslator(writer *qlik.AsyncStreamWriter, fieldDescriptors []pgx.FieldDescription) *AsyncTranslator {
+func NewAsyncTranslator(writer *AsyncStreamWriter, fieldDescriptors []pgx.FieldDescription) *AsyncTranslator {
 	var this = &AsyncTranslator{writer, fieldDescriptors, make(chan [][]interface{}, 10)}
 	go this.run()
 	return this
