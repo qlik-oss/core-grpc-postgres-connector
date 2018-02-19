@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/pgtype"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 )
 
 var fieldDescriptions = []pgx.FieldDescription{

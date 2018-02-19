@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -9,7 +10,7 @@ import (
 	"time"
 
 	"github.com/qlik-ea/postgres-grpc-connector/postgres"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -24,7 +25,7 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
+func (s *server) GetData(dataRequest *qlik.DataRequest, stream qlik.Connector_GetDataServer) error {
 
 	flag.Parse()
 
@@ -41,14 +42,14 @@ func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector
 	}
 
 	var t0 = makeTimestamp()
-	var connectionString = dataOptions.Connection.ConnectionString
+	var connectionString = dataRequest.Connection.ConnectionString
 
-	if dataOptions.Connection.User != "" {
-		connectionString = connectionString + ";user=" + dataOptions.Connection.User
+	if dataRequest.Connection.User != "" {
+		connectionString = connectionString + ";user=" + dataRequest.Connection.User
 	}
 
-	if dataOptions.Connection.Password != "" {
-		connectionString = connectionString + ";password=" + dataOptions.Connection.Password
+	if dataRequest.Connection.Password != "" {
+		connectionString = connectionString + ";password=" + dataRequest.Connection.Password
 	}
 
 	if s.postgresReaders[connectionString] == nil {
@@ -63,7 +64,7 @@ func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector
 		fmt.Println("Reusing connection pool")
 	}
 
-	err := s.postgresReaders[connectionString].GetData(dataOptions, stream)
+	err := s.postgresReaders[connectionString].GetData(dataRequest, stream)
 	if err != nil {
 		err = status.Error(codes.Internal, err.Error())
 	}
@@ -71,4 +72,9 @@ func (s *server) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector
 	fmt.Println("Time", t1-t0, "ms")
 
 	return err
+}
+
+func (s *server) GetMetaInfo(ctx context.Context, metaInfoRequest *qlik.MetaInfoRequest) (*qlik.MetaInfo, error) {
+	var metaInfo = qlik.MetaInfo{Name: "Postgres GPRC connector", Version: "1.0.0", Developer: "Qlik"}
+	return &metaInfo, nil
 }
