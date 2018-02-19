@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/jackc/pgx"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -28,7 +28,7 @@ func NewPostgresReader(connectString string) (*Reader, error) {
 }
 
 // GetData will return data from the postgres database.
-func (r *Reader) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector_GetDataServer) error {
+func (r *Reader) GetData(dataRequest *qlik.DataRequest, stream qlik.Connector_GetDataServer) error {
 	var done = make(chan bool)
 	// Connect to postgres
 	conn, err := r.pool.Acquire()
@@ -39,16 +39,16 @@ func (r *Reader) GetData(dataOptions *qlik.GetDataOptions, stream qlik.Connector
 
 	// Select postgresRowData
 
-	fmt.Println(dataOptions.Parameters.Statement)
-	fmt.Println(dataOptions.Connection.ConnectionString)
-	fmt.Println(dataOptions.Connection.User)
-	rows, err2 := conn.Query(dataOptions.Parameters.Statement)
+	fmt.Println(dataRequest.Parameters.Statement)
+	fmt.Println(dataRequest.Connection.ConnectionString)
+	fmt.Println(dataRequest.Connection.User)
+	rows, err2 := conn.Query(dataRequest.Parameters.Statement)
 	if err2 != nil {
 		fmt.Println(err2)
 	}
 
 	// Start asynchronus translation and writing
-	var asyncStreamwriter = qlik.NewAsyncStreamWriter(stream, done)
+	var asyncStreamwriter = NewAsyncStreamWriter(stream, done)
 	var asyncTranslator = NewAsyncTranslator(asyncStreamwriter, rows.FieldDescriptions())
 
 	// Set header with postgresRowData format

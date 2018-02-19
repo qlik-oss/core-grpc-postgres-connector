@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
 )
 
@@ -23,19 +23,19 @@ func main() {
 		return
 	}
 	client := qlik.NewConnectorClient(conn)
-	var getDataOptions = &qlik.GetDataOptions{}
-	getDataOptions.Connection = &qlik.ConnectionInfo{
+	var dataRequest = &qlik.DataRequest{}
+	dataRequest.Connection = &qlik.ConnectionInfo{
 		ConnectionString: "host=selun-gwe.qliktech.com;database=test",
 		User:             "testuser",
 		Password:         "testuser",
 	}
-	getDataOptions.Parameters = &qlik.DataInfo{
-		Statement:           "select * from manytypes",
-		StatementParameters: "",
+	dataRequest.Parameters = &qlik.DataInfo{
+		Statement:  "select * from manytypes",
+		Parameters: []*qlik.Parameter{},
 	}
 	var t0 = makeTimestamp()
 
-	var stream, err2 = client.GetData(context.Background(), getDataOptions)
+	var stream, err2 = client.GetData(context.Background(), dataRequest)
 	fmt.Println(err2)
 	var header, err3 = stream.Header()
 	fmt.Println(err3)
@@ -48,22 +48,16 @@ func main() {
 	if err2 != nil {
 		fmt.Println(err)
 	}
-	var bundle, receiveError = stream.Recv()
+	var dataChunk, receiveError = stream.Recv()
 
 	var totalCount int
 	for receiveError == nil {
-		var stringsLen = len(bundle.Cols[0].Strings)
-		var numbersLen = len(bundle.Cols[0].Doubles)
-		if stringsLen > 0 {
-			totalCount += stringsLen
-		} else {
-			totalCount += numbersLen
-		}
+		totalCount += len(dataChunk.StringCodes)
 
-		bundle, receiveError = stream.Recv()
+		dataChunk, receiveError = stream.Recv()
 	}
 	var t1 = makeTimestamp()
-	fmt.Println("Total columns", totalCount)
+	fmt.Println("Total entries", totalCount)
 	fmt.Println("Time", t1-t0, "ms")
 
 }

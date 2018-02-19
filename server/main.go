@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/qlik-ea/postgres-grpc-connector/postgres"
-	"github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
