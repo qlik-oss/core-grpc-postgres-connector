@@ -9,8 +9,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/qlik-ea/postgres-grpc-connector/postgres"
-	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
+	"github.com/qlik-ea/core-grpc-postgres-connector/postgres"
+	qlik "github.com/qlik-ea/core-grpc-postgres-connector/qlik"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

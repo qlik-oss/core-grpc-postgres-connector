@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/core-grpc-postgres-connector/qlik"
 )
 
 // AsyncStreamWriter defines the writer interface.
