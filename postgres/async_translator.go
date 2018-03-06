@@ -113,13 +113,13 @@ func (a *AsyncTranslator) buildDataChunk(tempQixRowList [][]interface{}) *qlik.D
 							dataChunk = addNumber(dataChunk, srcValue.(float64))
 						case float32:
 							dataChunk = addNumber(dataChunk, float64(srcValue.(float32)))
-						case pgtype.Numeric:
-							var value = srcValue.(pgtype.Numeric)
+						case *pgtype.Numeric:
+							var value = srcValue.(*pgtype.Numeric)
 							var tempValue float64
 							value.AssignTo(&tempValue)
 							dataChunk = addNumber(dataChunk, tempValue)
-						case pgtype.Decimal:
-							var value = srcValue.(pgtype.Decimal)
+						case *pgtype.Decimal:
+							var value = srcValue.(*pgtype.Decimal)
 							var tempValue float64
 							value.AssignTo(&tempValue)
 							dataChunk = addNumber(dataChunk, tempValue)
