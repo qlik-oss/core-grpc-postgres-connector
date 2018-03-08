@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	qlik "github.com/qlik-ea/postgres-grpc-connector/qlik"
+	qlik "github.com/qlik-ea/core-grpc-postgres-connector/qlik"
 	"google.golang.org/grpc"
 )
 
