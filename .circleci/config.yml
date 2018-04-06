@@ -5,7 +5,7 @@ jobs:
       - image: circleci/golang:1.9
     working_directory: ~/postgres-grpc-connector
     environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
+      DOCKER_REPO: qlikcore/postgres-grpc-connector
     steps:
       - checkout
       - setup_remote_docker:
@@ -33,7 +33,7 @@ jobs:
       - image: circleci/node:8
     working_directory: ~/postgres-grpc-connector
     environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
+      DOCKER_REPO: qlikcore/postgres-grpc-connector
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -67,7 +67,7 @@ jobs:
       - image: circleci/node:8
     working_directory: ~/postgres-grpc-connector
     environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
+      DOCKER_REPO: qlikcore/postgres-grpc-connector
     steps:
       - attach_workspace:
           at: /tmp/workspace

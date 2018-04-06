@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/qlik-ea/core-grpc-postgres-connector/postgres"
-	qlik "github.com/qlik-ea/core-grpc-postgres-connector/qlik"
+	"github.com/qlik-oss/core-grpc-postgres-connector/postgres"
+	qlik "github.com/qlik-oss/core-grpc-postgres-connector/qlik"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
