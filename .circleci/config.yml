@@ -61,7 +61,6 @@ jobs:
             docker cp ./ node-test-runner:./reload-runner/
             docker exec node-test-runner sh -c 'npm install'
             docker exec node-test-runner sh -c 'npm run start:ci -s'
-  # Job for publishing Docker image to Docker hub
 
 workflows:
   version: 2
