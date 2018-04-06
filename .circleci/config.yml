@@ -5,7 +5,7 @@ jobs:
       - image: circleci/golang:1.9
     working_directory: ~/postgres-grpc-connector
     environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
+      DOCKER_REPO: qlikcore/postgres-grpc-connector
     steps:
       - checkout
       - setup_remote_docker:
@@ -33,7 +33,7 @@ jobs:
       - image: circleci/node:8
     working_directory: ~/postgres-grpc-connector
     environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
+      DOCKER_REPO: qlikcore/postgres-grpc-connector
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -61,32 +61,6 @@ jobs:
             docker cp ./ node-test-runner:./reload-runner/
             docker exec node-test-runner sh -c 'npm install'
             docker exec node-test-runner sh -c 'npm run start:ci -s'
-  # Job for publishing Docker image to Docker hub
-  publish:
-    docker:
-      - image: circleci/node:8
-    working_directory: ~/postgres-grpc-connector
-    environment:
-      DOCKER_REPO: qlikea/postgres-grpc-connector
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker:
-          version: 17.10.0-ce
-      - run:
-          name: Import previously built docker image
-          command: docker load < /tmp/workspace/postgres-grpc-connector_image.tar
-      - run:
-          name: Login to Docker
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-      - run:
-          name: Push image to Docker Hub
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              VER=$(cat /tmp/workspace/version.txt)
-              docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
-            fi
-            docker push $DOCKER_REPO
 
 workflows:
   version: 2
@@ -96,7 +70,4 @@ workflows:
       - test:
           requires:
             - build
-      - publish:
-          requires:
-            - test
 
