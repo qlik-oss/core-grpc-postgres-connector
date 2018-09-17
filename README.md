@@ -24,7 +24,7 @@ using the connector.
 ### Steps to run the example
 
 Run in a \*nix environment (or Git Bash if on Windows), note that you must accept the
-[Qlik Core EULA](https://qlikcore.com/beta/) by setting the `ACCEPT_EULA`
+[Qlik Core EULA](https://core.qlik.com/eula/) by setting the `ACCEPT_EULA`
 environment variable:
 
 ```bash
