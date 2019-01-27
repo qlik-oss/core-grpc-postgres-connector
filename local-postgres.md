@@ -59,3 +59,32 @@ Other good commands to try is:
 It´s also possible to execute SQL statemets directly (you may need to change to correct database as described above)
 - `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' AND TABLE_SCHEMA='public';`
 - `SELECT * FROM airports;`
+
+## Using corectl
+
+Instead of using the programatic approach the tool [corectl](https://github.com/qlik-oss/corectl/releases) can be used to desribe the app you want to create.
+
+Start by creating a configuration file for corectl (in this case against the local postgres):
+```
+engine: localhost:19076
+script: ./script.qvs
+app: usingCorectl.qvf
+
+connections:
+  postgres-grpc-connector:
+      type: postgres-grpc-connector
+      username: postgres
+      password: postgres
+      settings:
+        database: test
+        host: host.docker.internal
+        port: 5432
+```
+
+Next you need to add the [Qlik script](https://core.qlik.com/services/qix-engine/script_reference/introduction/) to read from the database:
+```
+lib connect to 'postgres-grpc-connector';
+
+Airports:
+sql SELECT rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() FROM airports ORDER BY Airport;
+```
