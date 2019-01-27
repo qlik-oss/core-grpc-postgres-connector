@@ -4,6 +4,8 @@ services:
   postgres-database:
     container_name: postgres-database
     build: postgres-image/
+    ports:
+      - 54320:5432
 
   postgres-grpc-connector:
     container_name: postgres-grpc-connector
