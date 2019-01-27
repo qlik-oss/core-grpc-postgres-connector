@@ -64,7 +64,9 @@ It´s also possible to execute SQL statemets directly (you may need to change to
 
 Instead of using the programatic approach the tool [corectl](https://github.com/qlik-oss/corectl/releases) can be used to desribe the app you want to create.
 
-Start by creating a configuration file for corectl (in this case against the local postgres):
+Start by creating a configuration file for corectl (in this case against the local postgres).
+
+corectl.yml:
 ```
 engine: localhost:19076
 script: ./script.qvs
@@ -81,10 +83,17 @@ connections:
         port: 5432
 ```
 
-Next you need to add the [Qlik script](https://core.qlik.com/services/qix-engine/script_reference/introduction/) to read from the database:
+Next you need to add the [Qlik script](https://core.qlik.com/services/qix-engine/script_reference/introduction/) to read from the database.
+
+script.qvs:
 ```
 lib connect to 'postgres-grpc-connector';
 
 Airports:
 sql SELECT rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() FROM airports ORDER BY Airport;
 ```
+
+Let´s use our declarative files to generate the app.
+
+1. Run the command `corectl build` that will create the defined app, add our specified connector description (in the app), upload the defined script and do a reload. Finally corectl will save the app with the loaded data.
+2. To investigate the datamodel you can run `corectl catwalk` what will show the datamodel fetch from your QAE in a UI.
