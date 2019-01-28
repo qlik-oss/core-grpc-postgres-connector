@@ -18,7 +18,7 @@ This section can be skipped and the [airports.tar](./example/postgres-image/airp
 
 ## Third step: Setting up local postgres
 
-1. Use [pdAdmin](https://www.pgadmin.org/) to connect to your local (on the development computer). (localhost and port 5432 by default)
+1. Use [pgAdmin](https://www.pgadmin.org/) to connect to your local (on the development computer). (localhost and port 5432 by default)
 2. Create a new database (rightClick **Create > Databases** under **Servers** and name it **test**)
 3. RightClick the **test** database and select **Restore...**
 4. Locale the airports.tar and press **Restore**
