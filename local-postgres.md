@@ -19,9 +19,9 @@ This section can be skipped and the [airports.tar](./example/postgres-image/airp
 ## Third step: Setting up local postgres
 
 1. Use [pgAdmin](https://www.pgadmin.org/) to connect to your local (on the development computer). (localhost and port 5432 by default)
-2. Create a new database (rightClick **Create > Databases** under **Servers** and name it **test**)
-3. RightClick the **test** database and select **Restore...**
-4. Locale the airports.tar and press **Restore**
+2. Create a new database (right click **Create > Databases** under **Servers** and name it **test-database**)
+3. Right click the **test-database** database and select **Restore...**
+4. Locate the airports.tar and press **Restore**
 
 By default the local postgres is only listening on the localhost. Follow the guide [Configure PostgreSQL to allow remote connection](https://blog.bigbinary.com/2016/01/23/configure-postgresql-to-allow-remote-connection.html)
 
@@ -29,16 +29,16 @@ By default the local postgres is only listening on the localhost. Follow the gui
 
 The next step will only work for the docker-desktop-for(mac/windows). There is an alias/route for connecting to the localhost on the development computer. `host.docker.internal` will map back to `localhost` of the development computer / host.
 
-The only thing we need to change is the **qConnectionString** that contains the information of what host the **core-grpc-postgres-connector** shall connect to and the name of the new database that we created **test**.
+The only thing we need to change is the **qConnectionString** that contains the information of what host the **core-grpc-postgres-connector** shall connect to and the name of the new database that we created **test-database**.
 
 Change the host part of the **qConnectionString** to point at `host.docker.internal` (if other port than the default 5432 is used for postgres on the localhost that has to be changed as well).
 
-Also change the database name to **test** (from postgres).
+Also change the database name to **test-database** (from postgres).
 
 ./example/reload-runner/index.js
 ```
  qConnectionString:
-        'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=host.docker.internal;port=5432;database=test"',
+        'CUSTOM CONNECT TO "provider=postgres-grpc-connector;host=host.docker.internal;port=5432;database=test-database"',
 ```
 
 Rerun the test from the first step `npm start` and you should get the same result since we only moved the same table to another postgres.
@@ -53,7 +53,7 @@ If you didn´t get the same result as the first step we need to do some investig
 
 Other good commands to try is:
 - `\l` list databases
-- `\c test`  change to the test database
+- `\c test-database`  change to the test database
 - `\dt+` list tables
 
 It´s also possible to execute SQL statemets directly (you may need to change to correct database as described above)
@@ -62,7 +62,7 @@ It´s also possible to execute SQL statemets directly (you may need to change to
 
 ## Using corectl
 
-Instead of using the programatic approach the tool [corectl](https://github.com/qlik-oss/corectl/releases) can be used to desribe the app you want to create.
+Instead of using the programatic approach the tool [corectl](https://github.com/qlik-oss/corectl/releases) can be used to describe the app you want to create.
 
 Start by creating a configuration file for corectl (in this case against the local postgres).
 
@@ -93,7 +93,7 @@ Airports:
 sql SELECT rowID,Airport,City,Country,IATACode,ICAOCode,Latitude,Longitude,Altitude,TimeZone,DST,TZ, clock_timestamp() FROM airports ORDER BY Airport;
 ```
 
-Let´s use our declarative files to generate the app.
+Lets use our declarative files to generate the app.
 
 1. Run the command `corectl build` that will create the defined app, add our specified connector description (in the app), upload the defined script and do a reload. Finally corectl will save the app with the loaded data.
-2. To investigate the datamodel you can run `corectl catwalk` what will show the datamodel fetch from your QAE in a UI.
+2. To verify the structure of your datamodel you can run `corectl catwalk` that will show a graphical representation of the associations and tables in the app.
