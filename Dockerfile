@@ -1,4 +1,4 @@
-FROM golang:1.11 AS builder
+FROM golang:1.12 AS builder
 RUN go get -u github.com/golang/dep/cmd/dep
 ADD . /go/src/github.com/qlik-oss/core-grpc-postgres-connector
 WORKDIR /go/src/github.com/qlik-oss/core-grpc-postgres-connector
