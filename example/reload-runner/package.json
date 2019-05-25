@@ -14,7 +14,7 @@
     "enigma.js": "2.4.0",
     "eslint": "5.16.0",
     "eslint-config-airbnb-base": "13.1.0",
-    "eslint-plugin-import": "2.17.2",
+    "eslint-plugin-import": "2.17.3",
     "ws": "7.0.0"
   }
 }
