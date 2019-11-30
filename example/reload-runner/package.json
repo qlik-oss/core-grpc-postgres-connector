@@ -11,8 +11,8 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "enigma.js": "2.6.1",
-    "eslint": "6.7.0",
+    "enigma.js": "2.6.3",
+    "eslint": "6.7.1",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-plugin-import": "2.18.2",
     "ws": "7.2.0"
