@@ -6,6 +6,8 @@ services:
     build: postgres-image/
     ports:
       - 54320:5432 # Exposed to localhost to be able to use pgAdmin
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   postgres-grpc-connector:
     container_name: postgres-grpc-connector
