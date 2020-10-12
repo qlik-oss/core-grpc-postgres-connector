@@ -1,5 +1,7 @@
 # Example Postgres GRPC Connector
 
+*As of 1 July 2020, Qlik Core is no longer available to new customers. No further maintenance will be done in this repository.*
+
 The Example Postgres GRPC Connector shows how to load data into Qlik Associative Engine from Postgres using a
 dockerized connector built in Golang. It streams the data asynchronously using go channels though
 the following components before sending it onto Qlik Associative Engine.
